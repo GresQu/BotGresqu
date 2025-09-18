@@ -89,13 +89,13 @@ local function downloadFiles(fileList, urlBase, folder)
     end)
   end
 end
--- Funkcje aktualizacji
 local function updateAll()
   downloadFiles(vBotFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", vBotFolder)
   downloadFiles(mainFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", configFolder)
   downloadFiles(storageFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/storage/", storageFolder)
   downloadFiles(cavebotFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", cavebotFolder)
   downloadFiles(targetbotFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", targetbotFolder)
+  warn("Update Complete! Please fully restart the bot.")
 end
 
 local function updateWithoutStorage()
@@ -104,12 +104,13 @@ local function updateWithoutStorage()
   -- skipping storageFiles
   downloadFiles(cavebotFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", cavebotFolder)
   downloadFiles(targetbotFiles, "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", targetbotFolder)
+  warn("Update Complete! Please fully restart the bot.")
 end
--- Adding buttons with English labels
+
 UI.Button("Update All", function()
-  updateAll()
+    updateAll()
 end)
 
 UI.Button("Update Without Settings", function()
-  updateWithoutStorage()
+    updateWithoutStorage()
 end)
