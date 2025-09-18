@@ -43,7 +43,7 @@ ScriptManagerWindow < MainWindow
       anchors.right: scriptList.right
       step: 14
       pixels-scroll: true
-	  minimum: 0
+      minimum: 0
       maximum: 100
       value: 0
 
