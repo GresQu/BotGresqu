@@ -41,18 +41,50 @@ local function stopUpdateProgress()
     end
 end
 
--- Funkcja normalizująca content
+-- Function to remove profile files from storage
+local function removeProfileFiles()
+    local removedFiles = {}
+    local profileFiles = {"profile_1.json", "profile_2.json", "profile_3.json", "profile_4.json", "profile_5.json"}
+    
+    print("=== REMOVING PROFILE FILES ===")
+    
+    for _, filename in ipairs(profileFiles) do
+        local profilePath = storageFolder .. "/" .. filename
+        if g_resources.fileExists(profilePath) then
+            local success = g_resources.deleteFile(profilePath)
+            if success then
+                print("REMOVED: " .. filename)
+                table.insert(removedFiles, "REMOVED: storage/" .. filename)
+            else
+                print("ERROR removing: " .. filename)
+            end
+        else
+            print("NOT FOUND: " .. filename)
+        end
+    end
+    
+    if #removedFiles > 0 then
+        print("Removed " .. #removedFiles .. " profile files - they will be recreated with defaults")
+    else
+        print("No profile files found to remove")
+    end
+    print("")
+    
+    return removedFiles
+end
+
+-- Normalize content for better comparison
 local function normalizeContent(content)
     if not content then return nil end
-    -- Zamień Windows/Mac line endings na Unix
+    -- Replace Windows/Mac line endings with Unix
     content = content:gsub('\r\n', '\n')
     content = content:gsub('\r', '\n')
-    -- Usuń białe znaki z końca
+    -- Remove trailing whitespace
     content = content:gsub('%s+$', '')
     return content
 end
 
--- Poprawiona funkcja saveFile
+-- Enhanced save function with detailed logging
 local function saveFile(path, content, filename)
     local folderPath = path:match("(.+)/[^/]+$")
     if folderPath and not g_resources.directoryExists(folderPath) then
@@ -62,8 +94,6 @@ local function saveFile(path, content, filename)
     
     if g_resources.fileExists(path) then
         local existingContent = g_resources.readFileContents(path)
-        
-        -- Porównaj znormalizowaną zawartość
         if normalizeContent(existingContent) == normalizeContent(content) then
             print("SKIPPED (up to date): " .. filename)
             return false
@@ -126,11 +156,19 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
     nextFile()
 end
 
--- Enhanced update function with verification
-local function runUpdate(fileGroups)
+-- Enhanced update function with profile removal
+local function runUpdate(fileGroups, removeProfiles)
     local updatedFiles = {}
     local groupIndex = 1
     local totalGroups = #fileGroups
+    
+    -- Remove profile files if requested
+    if removeProfiles then
+        local removedFiles = removeProfileFiles()
+        for _, file in ipairs(removedFiles) do
+            table.insert(updatedFiles, file)
+        end
+    end
     
     -- Verify all folders exist
     print("=== FOLDER VERIFICATION ===")
@@ -158,15 +196,15 @@ local function runUpdate(fileGroups)
             
             print("=== UPDATE SUMMARY ===")
             print("Expected files: " .. totalExpected)
-            print("Updated files: " .. #updatedFiles)
+            print("Updated/Removed files: " .. #updatedFiles)
             print("")
             
             if #updatedFiles > 0 then
-                print("Updated files list:")
+                print("Updated/Removed files list:")
                 for _, file in ipairs(updatedFiles) do
                     print("- " .. file)
                 end
-                warn("Update completed! Updated " .. #updatedFiles .. "/" .. totalExpected .. " files.\n\nPlease restart the bot to apply changes.")
+                warn("Update completed! Updated " .. #updatedFiles .. " files.\n\nPlease restart the bot to apply changes.")
             else
                 warn("Update completed! All " .. totalExpected .. " files are up to date.\n\nPlease restart the bot.")
             end
@@ -205,7 +243,6 @@ local vBotFiles = {
 }
 
 local mainFiles = { "_Loader.lua" }
-local storageFiles = { "profile_1.json" }
 
 local cavebotFiles = {
   "actions.lua", "cavebot.lua", "cavebot.otui", "clear_tile.lua",
@@ -220,31 +257,8 @@ local targetbotFiles = {
   "creature_priority.lua", "looting.lua", "looting.otui", "target.lua", "target.otui", "walking.lua"
 }
 
--- Enhanced buttons with logging
-UI.Button("Update All", function()
-    if updateInProgress then
-        warn("Update already in progress, please wait...")
-        return
-    end
-    
-    print("vBot files count: " .. #vBotFiles)
-    print("Main files count: " .. #mainFiles)
-    print("Storage files count: " .. #storageFiles)
-    print("Cavebot files count: " .. #cavebotFiles)
-    print("Targetbot files count: " .. #targetbotFiles)
-    print("Total expected: " .. (#vBotFiles + #mainFiles + #storageFiles + #cavebotFiles + #targetbotFiles))
-    print("")
-    
-    runUpdate({
-        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
-        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
-        {list = storageFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/storage/", folder = storageFolder},
-        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
-        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
-    })
-end)
-
-UI.Button("Update Without Settings", function()
+-- Enhanced buttons with profile removal option
+UI.Button("Update All + Reset Profiles", function()
     if updateInProgress then
         warn("Update already in progress, please wait...")
         return
@@ -255,6 +269,7 @@ UI.Button("Update Without Settings", function()
     print("Cavebot files count: " .. #cavebotFiles)
     print("Targetbot files count: " .. #targetbotFiles)
     print("Total expected: " .. (#vBotFiles + #mainFiles + #cavebotFiles + #targetbotFiles))
+    print("Profile removal: ENABLED")
     print("")
     
     runUpdate({
@@ -262,5 +277,21 @@ UI.Button("Update Without Settings", function()
         {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
         {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
         {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
-    })
+    }, true) -- true = remove profiles
+end)
+
+UI.Button("Only Remove Profiles", function()
+    if updateInProgress then
+        warn("Update already in progress, please wait...")
+        return
+    end
+    
+    print("=== PROFILE REMOVAL ONLY ===")
+    local removedFiles = removeProfileFiles()
+    
+    if #removedFiles > 0 then
+        warn("Profile removal completed! Removed " .. #removedFiles .. " files.\n\nPlease restart the bot to recreate defaults.")
+    else
+        warn("Profile removal completed! No profile files found.")
+    end
 end)
