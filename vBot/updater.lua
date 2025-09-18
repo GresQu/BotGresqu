@@ -43,87 +43,55 @@ end
 
 -- Function to remove profile files from storage
 local function removeProfileFiles()
-    local removedFiles = {}
+    local removedCount = 0
     local profileFiles = {"profile_1.json", "profile_2.json", "profile_3.json", "profile_4.json", "profile_5.json"}
-    
-    print("=== REMOVING PROFILE FILES ===")
     
     for _, filename in ipairs(profileFiles) do
         local profilePath = storageFolder .. "/" .. filename
         if g_resources.fileExists(profilePath) then
             local success = g_resources.deleteFile(profilePath)
             if success then
-                print("REMOVED: " .. filename)
-                table.insert(removedFiles, "REMOVED: storage/" .. filename)
-            else
-                print("ERROR removing: " .. filename)
+                removedCount = removedCount + 1
             end
-        else
-            print("NOT FOUND: " .. filename)
         end
     end
     
-    if #removedFiles > 0 then
-        print("Removed " .. #removedFiles .. " profile files - they will be recreated with defaults")
-    else
-        print("No profile files found to remove")
-    end
-    print("")
-    
-    return removedFiles
+    return removedCount
 end
 
 -- Normalize content for better comparison
 local function normalizeContent(content)
     if not content then return nil end
-    -- Replace Windows/Mac line endings with Unix
     content = content:gsub('\r\n', '\n')
     content = content:gsub('\r', '\n')
-    -- Remove trailing whitespace
     content = content:gsub('%s+$', '')
     return content
 end
 
--- Enhanced save function with detailed logging
-local function saveFile(path, content, filename)
+-- Save function
+local function saveFile(path, content)
     local folderPath = path:match("(.+)/[^/]+$")
     if folderPath and not g_resources.directoryExists(folderPath) then
-        print("Creating folder: " .. folderPath)
         g_resources.makeDir(folderPath)
     end
     
     if g_resources.fileExists(path) then
         local existingContent = g_resources.readFileContents(path)
         if normalizeContent(existingContent) == normalizeContent(content) then
-            print("SKIPPED (up to date): " .. filename)
             return false
         end
     end
     
     local success = g_resources.writeFileContents(path, content)
-    if success then
-        print("UPDATED: " .. filename)
-        return true
-    else
-        print("ERROR writing file: " .. filename)
-        return false
-    end
+    return success
 end
 
--- Enhanced sequential download with detailed logging
-local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, onComplete, folderName)
+-- Sequential download
+local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, onComplete)
     local index = 1
-    local folderUpdated = 0
-    local folderSkipped = 0
-    local folderErrors = 0
-    
-    print("=== Starting folder: " .. folderName .. " (" .. #fileList .. " files) ===")
     
     local function nextFile()
         if index > #fileList then
-            print("=== Finished folder: " .. folderName .. " ===")
-            print("Updated: " .. folderUpdated .. ", Skipped: " .. folderSkipped .. ", Errors: " .. folderErrors)
-            print("")
             if onComplete then onComplete() end
             return
         end
@@ -132,21 +100,10 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
         local url = urlBase .. filename
         local localPath = folder .. "/" .. filename
         
-        print("Downloading: " .. filename .. " (" .. index .. "/" .. #fileList .. ")")
-        
         HTTP.get(url, function(content, err)
-            if err then
-                print("DOWNLOAD ERROR: " .. filename .. " - " .. err)
-                folderErrors = folderErrors + 1
-            elseif not content or content == "" then
-                print("EMPTY CONTENT: " .. filename)
-                folderErrors = folderErrors + 1
-            else
-                if saveFile(localPath, content, filename) then
-                    table.insert(updatedFiles, folderName .. "/" .. filename)
-                    folderUpdated = folderUpdated + 1
-                else
-                    folderSkipped = folderSkipped + 1
+            if not err and content and content ~= "" then
+                if saveFile(localPath, content) then
+                    table.insert(updatedFiles, filename)
                 end
             end
             index = index + 1
@@ -156,31 +113,24 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
     nextFile()
 end
 
--- Enhanced update function with profile removal
+-- Update function
 local function runUpdate(fileGroups, removeProfiles)
     local updatedFiles = {}
     local groupIndex = 1
     local totalGroups = #fileGroups
+    local removedProfiles = 0
     
     -- Remove profile files if requested
     if removeProfiles then
-        local removedFiles = removeProfileFiles()
-        for _, file in ipairs(removedFiles) do
-            table.insert(updatedFiles, file)
-        end
+        removedProfiles = removeProfileFiles()
     end
     
     -- Verify all folders exist
-    print("=== FOLDER VERIFICATION ===")
     for _, group in ipairs(fileGroups) do
         if not g_resources.directoryExists(group.folder) then
-            print("Creating missing folder: " .. group.folder)
             g_resources.makeDir(group.folder)
-        else
-            print("Folder exists: " .. group.folder)
         end
     end
-    print("")
     
     updateInProgress = true
     showUpdateProgress()
@@ -194,17 +144,15 @@ local function runUpdate(fileGroups, removeProfiles)
                 totalExpected = totalExpected + #group.list
             end
             
-            print("=== UPDATE SUMMARY ===")
-            print("Expected files: " .. totalExpected)
-            print("Updated/Removed files: " .. #updatedFiles)
-            print("")
+            local totalUpdated = #updatedFiles + removedProfiles
             
-            if #updatedFiles > 0 then
-                print("Updated/Removed files list:")
-                for _, file in ipairs(updatedFiles) do
-                    print("- " .. file)
+            if totalUpdated > 0 then
+                local message = "Update completed! Updated " .. #updatedFiles .. " files"
+                if removedProfiles > 0 then
+                    message = message .. ", removed " .. removedProfiles .. " profiles"
                 end
-                warn("Update completed! Updated " .. #updatedFiles .. " files.\n\nPlease restart the bot to apply changes.")
+                message = message .. ".\n\nPlease restart the bot to apply changes."
+                warn(message)
             else
                 warn("Update completed! All " .. totalExpected .. " files are up to date.\n\nPlease restart the bot.")
             end
@@ -212,13 +160,11 @@ local function runUpdate(fileGroups, removeProfiles)
         end
         
         local group = fileGroups[groupIndex]
-        local folderName = group.folder:match(".*/(.+)$") or group.folder
         groupIndex = groupIndex + 1
         
-        downloadFilesSequential(group.list, group.url, group.folder, updatedFiles, processNextGroup, folderName)
+        downloadFilesSequential(group.list, group.url, group.folder, updatedFiles, processNextGroup)
     end
     
-    print("=== STARTING UPDATE PROCESS ===")
     warn("Starting update...")
     processNextGroup()
 end
@@ -257,27 +203,33 @@ local targetbotFiles = {
   "creature_priority.lua", "looting.lua", "looting.otui", "target.lua", "target.otui", "walking.lua"
 }
 
--- Enhanced buttons with profile removal option
+-- Buttons
 UI.Button("Update All + Reset Profiles", function()
     if updateInProgress then
         warn("Update already in progress, please wait...")
         return
     end
     
-    print("vBot files count: " .. #vBotFiles)
-    print("Main files count: " .. #mainFiles)
-    print("Cavebot files count: " .. #cavebotFiles)
-    print("Targetbot files count: " .. #targetbotFiles)
-    print("Total expected: " .. (#vBotFiles + #mainFiles + #cavebotFiles + #targetbotFiles))
-    print("Profile removal: ENABLED")
-    print("")
+    runUpdate({
+        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
+        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
+        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
+        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
+    }, true)
+end)
+
+UI.Button("Update Without Settings", function()
+    if updateInProgress then
+        warn("Update already in progress, please wait...")
+        return
+    end
     
     runUpdate({
         {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
         {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
         {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
         {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
-    }, true) -- true = remove profiles
+    }, false)
 end)
 
 UI.Button("Only Remove Profiles", function()
@@ -286,11 +238,10 @@ UI.Button("Only Remove Profiles", function()
         return
     end
     
-    print("=== PROFILE REMOVAL ONLY ===")
-    local removedFiles = removeProfileFiles()
+    local removedCount = removeProfileFiles()
     
-    if #removedFiles > 0 then
-        warn("Profile removal completed! Removed " .. #removedFiles .. " files.\n\nPlease restart the bot to recreate defaults.")
+    if removedCount > 0 then
+        warn("Profile removal completed! Removed " .. removedCount .. " files.\n\nPlease restart the bot to recreate defaults.")
     else
         warn("Profile removal completed! No profile files found.")
     end
