@@ -1,0 +1,141 @@
+SummonSetupWindow < MainWindow
+  id: summonSetupWindow
+  !text: tr('Summon Setup')
+  size: 400 300
+  @onEscape: self:hide()
+
+  // Lewa strona
+  Panel
+    id: leftPanel
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 190
+    margin: 10
+
+    Label
+      !text: tr('Pet Name:')
+      anchors.top: parent.top
+      anchors.left: parent.left
+
+    BotTextEdit
+      id: leftPetName
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    Label
+      !text: tr('Item ID:')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 10
+
+    BotTextEdit
+      id: leftItemId
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    Label
+      !text: tr('Spell Name:')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 10
+
+    BotTextEdit
+      id: leftSpell
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    Label
+      !text: tr('Delay (ms):')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 10
+
+    BotTextEdit
+      id: leftDelay
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    BotSwitch
+      id: leftEnabled
+      !text: tr('Enable Summon')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 10
+
+  // Prawa strona
+  Panel
+    id: rightPanel
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 190
+    margin: 10
+
+    Label
+      !text: tr('Pet Name:')
+      anchors.top: parent.top
+      anchors.left: parent.left
+
+    BotTextEdit
+      id: rightPetName
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    Label
+      !text: tr('Item ID:')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 10
+
+    BotTextEdit
+      id: rightItemId
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    Label
+      !text: tr('Spell Name:')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 10
+
+    BotTextEdit
+      id: rightSpell
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    Label
+      !text: tr('Delay (ms):')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      margin-top: 10
+
+    BotTextEdit
+      id: rightDelay
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 5
+
+    BotSwitch
+      id: rightEnabled
+      !text: tr('Enable Summon')
+      anchors.top: prev.bottom
+      anchors.left: parent.left
+      width: 150
+      margin-top: 10

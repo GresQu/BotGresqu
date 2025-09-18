@@ -1,0 +1,442 @@
+{
+  "powerUpBuff_spellName": "Divine Hakai",
+  "ingame_hotkeys": "-- CONFIG\nlocal BUFF_DURATION = 15 * 60 -- 15 minut w sekundach\nlocal RETRY_DELAY = 12 -- odstêp miêdzy próbami w sekundach\n\nlocal ITEM_IDS = {\n  damage = 22525,\n  protect = 22522,\n  hp = 22519\n}\n\n-- BUFFY: damage, protect, hp\nlocal buffs = {\n  damage = {lastActivated = 0, nextTry = 0, active = false},\n  protect = {lastActivated = 0, nextTry = 0, active = false},\n  hp = {lastActivated = 0, nextTry = 0, active = false}\n}\n\n-- Makro do automatycznego u¿ywania buffów\nmacro(1000, \"Auto Buff Reuser\", function()\n  local now = os.time()\n\n  for name, itemId in pairs(ITEM_IDS) do\n    local buff = buffs[name]\n    local timeSince = now - buff.lastActivated\n\n    -- Jeœli buff wygas³ lub jeszcze nie by³ aktywowany\n    if not buff.active or timeSince >= BUFF_DURATION then\n      -- Czas na kolejn¹ próbê?\n      if now >= buff.nextTry then\n        use(itemId)\n        buff.nextTry = now + RETRY_DELAY\n      end\n    end\n  end\nend)\n\n-- Nas³uchiwanie wiadomoœci tekstowych (tylko MonsterYell = mode 17)\nonTextMessage(function(mode, text)\n  if mode ~= 17 then return end\n\n  local msg = text:lower()\n\n  -- Obs³uga komunikatów o aktywacji buffów\n  if msg:find(\"bônus de\") or msg:find(\"bonus de\") then\n    if msg:find(\"damage\") then\n      buffs.damage.lastActivated = os.time()\n      buffs.damage.active = true\n    elseif msg:find(\"protect\") then\n      buffs.protect.lastActivated = os.time()\n      buffs.protect.active = true\n    elseif msg:find(\"vida máxima\") or msg:find(\"vida maxima\") then\n      buffs.hp.lastActivated = os.time()\n      buffs.hp.active = true\n    end\n    return\n  end\n\n  -- Obs³uga komunikatów o cooldownie (exhaust)\n  local seconds = msg:match(\"exausto por (%d+) segundos\")\n  if seconds then\n    seconds = tonumber(seconds)\n    if msg:find(\"damage\") then\n      buffs.damage.nextTry = os.time() + seconds\n    elseif msg:find(\"protect\") then\n      buffs.protect.nextTry = os.time() + seconds\n    elseif msg:find(\"vida máxima\") or msg:find(\"vida maxima\") then\n      buffs.hp.nextTry = os.time() + seconds\n    end\n  end\nend)\n\n\nlocal defense_head = 11712\nlocal normal_head = 11455\nlocal head_percent = 80\nlocal mana_low_threshold = 10\nlocal mana_regen_stop = 30\nlocal manaRegen = false\n\nmacro(20, \"berecik\", function()\n  local hp = hppercent()\n  local mp = manapercent()\n  local headItem = getHead()\n  local currentHead = headItem and headItem.id or 0\n\n  if hp == nil or mp == nil then\n    return\n  end\n\n  -- Sprawdzenie regeneracji many\n  if manaRegen then\n    if mp >= mana_regen_stop then\n      manaRegen = false\n      if currentHead ~= defense_head then\n        moveToSlot(findItem(defense_head), SlotHead)\n      end\n      return\n    else\n      if currentHead ~= normal_head then\n        moveToSlot(findItem(normal_head), SlotHead)\n      end\n      return\n    end\n  end\n\n  -- Sprawdzenie HP\n  if hp <= head_percent then\n    if mp > mana_low_threshold then\n      if currentHead ~= defense_head then\n        moveToSlot(findItem(defense_head), SlotHead)\n      end\n    else\n      manaRegen = true\n      if currentHead ~= normal_head then\n        moveToSlot(findItem(normal_head), SlotHead)\n      end\n    end\n  else\n    if currentHead ~= normal_head then\n      moveToSlot(findItem(normal_head), SlotHead)\n    end\n  end\nend)\n",
+  "pickUpIDs": "2160,2152,3035,3043,3031,2148",
+  "GodBuff_manaBellow": 0,
+  "spell3": "Ki Defense",
+  "FirstSpellPvETarget": "Spell_Name",
+  "healFriendDelay": "200",
+  "powerUpBuff_healthBellow": 0,
+  "cooldown1": "100",
+  "autoTradeMessage": "SELL SET EMERALD FULL LVL 350 + Teach Glove por 500 pts ",
+  "buffTimerPosition": {
+    "y": 906,
+    "x": 1402
+  },
+  "rageBuff_spellName": "Mega Power Up",
+  "_macros": {
+    "": false,
+    "PvP Spell": false,
+    "Turn_To_Target": true,
+    "Attack Low": false,
+    "Swap Legs": false,
+    "Follow Change": false,
+    "PreciseLegSwap": false,
+    "Auto Buff Reuser": true,
+    "Sense LastTarget": false,
+    "Start": true,
+    "ForceLegSwap": false,
+    "Pick_UP": false,
+    "Send message on trade": false,
+    "Attack High": false,
+    "First_Buff": true,
+    "ContinuousLegSwap": false,
+    "Infinite Legs Swap": false,
+    "berecik": true,
+    "trans": false,
+    "PvE Aoe Spell": false,
+    "Attack Players": false,
+    "Third_Buff": false,
+    "RobustLegSwap": true,
+    "bless": false,
+    "Speed Up": true,
+    "Bug Map": false,
+    "PvE Spell": false,
+    "Second_Buff": false,
+    "Stamina Use": false,
+    "Follow Attack": false,
+    "Follow": false,
+    "skill_check_use_items": false
+  },
+  "FirstSpellPvEAoe": "Spell_Name",
+  "spell2Proc": "93",
+  "GodBuff_cooldown": 75,
+  "_icons": {
+    "cI": {
+      "y": 0.36398104265403,
+      "x": 0.17005347593583
+    },
+    "Pve_Spell": {
+      "y": 0.45,
+      "x": 0.01,
+      "enabled": false
+    },
+    "AdvSpellsIcon": {
+      "y": 0.3914691943128,
+      "x": 0.16216216216216,
+      "enabled": false
+    },
+    "Attack Low": {
+      "y": 0.49365853658537,
+      "x": 0.16514745308311,
+      "enabled": false
+    },
+    "Aoe_PvE": {
+      "y": 0.25,
+      "x": 0.01,
+      "enabled": false
+    },
+    "Attack High": {
+      "y": 0.43512195121951,
+      "x": 0.16290322580645,
+      "enabled": false
+    },
+    "PvP_Spell": {
+      "y": 0.05,
+      "x": 0.01,
+      "enabled": false
+    },
+    "tI": {
+      "y": 0.33838862559242,
+      "x": 0.16844919786096
+    }
+  },
+  "autofollow": {
+    "player": "Zgyms"
+  },
+  "GodBuff_healthBellow": 0,
+  "moneyItems": [
+    {
+      "count": 1,
+      "id": 3031
+    },
+    {
+      "count": 1,
+      "id": 3035
+    }
+  ],
+  "AoeRange": "5",
+  "renameContainers": {
+    "forceOpen": true,
+    "list": [
+      {
+        "items": [
+
+        ],
+        "value": "main",
+        "enabled": true,
+        "min": false,
+        "item": 11846
+      }
+    ],
+    "purse": true,
+    "enabled": false,
+    "height": 170
+  },
+  "powerUpBuff_manaBellow": 0,
+  "FirstSpellPvP": "Spell_Name",
+  "buffSpellCD": "10000",
+  "spell2": "Big Regeneration",
+  "foodItems": [
+
+  ],
+  "FiltroMobs": false,
+  "MonsterLower": "2",
+  "spell1": "Big Regeneration",
+  "ignoreDistanceWay": "deer,rabbit",
+  "FiltroPlayers": false,
+  "AutoRevide": {
+    "pausedTarget": false,
+    "pausedCave": false
+  },
+  "hasteSpell": "super speed",
+  "rageBuff_manaBellow": 0,
+  "autoBuffText": "Power Down",
+  "wodboHealing": {
+    "globalCooldown": 150,
+    "pve": {
+      "enableUltimatePotion": false,
+      "senzuPercent": 60,
+      "ultimatePotionPercent": 80,
+      "enableSenzu": false,
+      "manaPercent": 50,
+      "enableRedSenzu": false,
+      "enableMana": false,
+      "rageValue": 100,
+      "enableRage": false,
+      "redSenzuPercent": 30
+    },
+    "pvp": {
+      "enableUltimatePotion": false,
+      "senzuPercent": 80,
+      "ultimatePotionPercent": 80,
+      "enableSenzu": false,
+      "manaPercent": 70,
+      "enableRedSenzu": false,
+      "enableMana": false,
+      "rageValue": 150,
+      "enableRage": false,
+      "redSenzuPercent": 80
+    },
+    "currentMode": "pve"
+  },
+  "healFriendPercent": "85",
+  "cooldown4": "100",
+  "spell3Proc": "25",
+  "summonSetup": {
+    "summons": {
+      "right": {
+        "delay": "2000",
+        "enabled": false,
+        "spell": "",
+        "name": "",
+        "itemId": "0"
+      },
+      "left": {
+        "delay": "2000",
+        "enabled": false,
+        "spell": "",
+        "name": "",
+        "itemId": "0"
+      }
+    }
+  },
+  "rageBuff_healthBellow": 0,
+  "antiPushPanel": {
+    "lastItem": 3,
+    "enabled": false,
+    "items": [
+      3031,
+      3035,
+      0,
+      0,
+      0
+    ]
+  },
+  "manaTrain": {
+    "max": 100,
+    "title": "MP%",
+    "on": true,
+    "min": 80,
+    "text": "power down"
+  },
+  "spell1Proc": "93",
+  "senseTracker": {
+    "targetHistory": [
+
+    ],
+    "targetName": "",
+    "spellName": "sense"
+  },
+  "distance_attack_smart_high": "3",
+  "alarms": {
+    "playerDetected": true,
+    "privateMessage": false,
+    "healthBelow": true,
+    "healthValue": 20,
+    "playerDetectedLogout": false,
+    "playerAttack": true,
+    "bossName": "[B]",
+    "ignoreFriends": false,
+    "manaBelow": false,
+    "messageText": "",
+    "manaValue": 50,
+    "enabled": false,
+    "warnBoss": false,
+    "creatureDetected": false
+  },
+  "spell4Proc": "90",
+  "friend_range": "2",
+  "rageBuff_cooldown": 30,
+  "GodBuff_spellName": "Spell_Name",
+  "cooldown2": "100",
+  "afkMsg": "afk",
+  "FirstSpellPvE": "Spell_Name",
+  "ignoreCreatures": "deer,rabbit",
+  "_configs": {
+    "targetbot_configs": {
+      "selected": "main",
+      "enabled": false
+    },
+    "cavebot_configs": {
+      "selected": "liony",
+      "enabled": false
+    }
+  },
+  "advancedSpells": {
+    "macroEnabled": false,
+    "minMonstersAoe": "2",
+    "aoeRange": "3",
+    "spellList": [
+      {
+        "aoeSafe": false,
+        "aoe": true,
+        "delay": 100,
+        "pvp": false,
+        "pve": false,
+        "name": "Destruction Wrath",
+        "lastCast": 52854
+      },
+      {
+        "aoeSafe": false,
+        "aoe": false,
+        "delay": 100,
+        "pvp": true,
+        "pve": false,
+        "name": "Destruction Power",
+        "lastCast": 0
+      },
+      {
+        "aoeSafe": false,
+        "aoe": false,
+        "delay": 100,
+        "pvp": true,
+        "pve": false,
+        "name": "Beerus Ball",
+        "lastCast": 0
+      },
+      {
+        "aoeSafe": false,
+        "aoe": false,
+        "delay": 100,
+        "pvp": true,
+        "pve": true,
+        "name": "Beerus Judgement",
+        "lastCast": 0
+      }
+    ],
+    "windowVisible": false,
+    "notComboEnabled": false
+  },
+  "healSpellsEnabled": {
+    "spell3": false,
+    "spell1": true,
+    "spell4": false,
+    "spell2": false
+  },
+  "itemHealing": {
+    "pve": {
+      "mana3enabled": false,
+      "hpItem2": 0,
+      "hp2enabled": false,
+      "maxMana1": 66,
+      "manaItem1": 236,
+      "maxHp3": 91,
+      "mana2enabled": false,
+      "hpItem3": 0,
+      "minMana1": 0,
+      "maxHp2": 80,
+      "mana1enabled": false,
+      "minMana2": 0,
+      "maxMana3": 90,
+      "minHp2": 0,
+      "maxHp1": 80,
+      "hpItem1": 236,
+      "minMana3": 0,
+      "hp3enabled": false,
+      "manaItem2": 0,
+      "hp1enabled": true,
+      "minHp1": 0,
+      "maxMana2": 90,
+      "minHp3": 0,
+      "manaItem3": 0
+    },
+    "pvp": {
+      "mana3enabled": false,
+      "hpItem2": 237,
+      "hp2enabled": false,
+      "maxMana1": 80,
+      "manaItem1": 236,
+      "maxHp3": 91,
+      "mana2enabled": false,
+      "hpItem3": 236,
+      "minMana1": 0,
+      "maxHp2": 45,
+      "mana1enabled": true,
+      "minMana2": 0,
+      "maxMana3": 90,
+      "minHp2": 0,
+      "maxHp1": 93,
+      "hpItem1": 236,
+      "minMana3": 0,
+      "hp3enabled": false,
+      "manaItem2": 0,
+      "hp1enabled": true,
+      "minHp1": 40,
+      "maxMana2": 90,
+      "minHp3": 45,
+      "manaItem3": 0
+    },
+    "currentMode": "pve"
+  },
+  "cooldown3": "100",
+  "autoBuffText2": "Power Down",
+  "FiltroSkull": false,
+  "FiltroParty": true,
+  "scriptManager": {
+    "Bug_map": false,
+    "bless": true,
+    "AdvancedBuff": true,
+    "Sense_last_target": true,
+    "ManaTrain": true,
+    "profile_selector": true,
+    "exp_gain": true,
+    "NDBO_Chaos": false,
+    "Anty_push": true,
+    "ingame_editor": true,
+    "afkmsgreply": false,
+    "exchange_money": true,
+    "Attack_All": true,
+    "AutoEnergy": false,
+    "warning": true,
+    "AdvancedSpellCaster": true,
+    "Summon_Pet": false,
+    "Auto Follow": true,
+    "smartertargeting": true,
+    "Hold_Target": true,
+    "ToogleCaveTarg": true,
+    "Auto_traveler": true,
+    "trade_message": true,
+    "battleListFilters": false,
+    "effect_avoider": true,
+    "xeno_menu": true,
+    "Friend_Healer": true,
+    "pick_up": true,
+    "Fast_Move": false,
+    "Cast_Spell": false,
+    "Healing_item": true,
+    "eat_food": true,
+    "analyzer": false,
+    "auto_friend_party": true,
+    "basic_buff": false,
+    "spy_level": true,
+    "Attack_Back": true,
+    "AttackMonsterwithMoreHp": true,
+    "npc_talk": false,
+    "auto_follow_attacker": true,
+    "TurnToTarget": true,
+    "StackItems": false,
+    "Wodbo_Healing": false,
+    "alarms": true,
+    "healing_setup": true,
+    "cavebot": true,
+    "Speed_Up": true,
+    "myFriendList": true,
+    "Containers": true
+  },
+  "powerUpBuff_cooldown": 120,
+  "extras": {
+    "timers": false,
+    "pathfinding": true,
+    "gotoMaxDistance": 50,
+    "checkPlayer": false,
+    "looting": 1,
+    "killUnder": 1,
+    "joinBot": false,
+    "lootDelay": 100,
+    "autoOpenDoors": false,
+    "nextBackpack": false,
+    "reachable": true,
+    "huntRoutes": 40,
+    "antiKick": false,
+    "title": false,
+    "separatePm": false,
+    "talkDelay": 1000,
+    "highlightTarget": false,
+    "height": 360,
+    "bless": true
+  },
+  "FiltroNpcs": false,
+  "friendSpellName": "Spell_Name",
+  "buffSpellCD2": "10000"
+}

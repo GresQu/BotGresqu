@@ -1,0 +1,270 @@
+SpellEntryWidget < UIWidget
+  id: spellEntryWidgetInstance
+  height: 30
+  padding: 2 5
+  focusable: true
+  $focus:
+    background-color: #44444455
+  Label
+    id: spellNameLabel
+    anchors.left: parent.left
+    anchors.verticalCenter: parent.verticalCenter
+    width: 150
+    font: verdana-11px-rounded
+  BotSwitch
+    id: pveSwitch
+    text: PvE
+    anchors.left: spellNameLabel.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 10
+    width: 50
+  BotSwitch
+    id: pvpSwitch
+    text: PvP
+    anchors.left: pveSwitch.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 5
+    width: 50
+  BotSwitch
+    id: aoeSwitch
+    text: AoE
+    anchors.left: pvpSwitch.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 5
+    width: 50
+  BotSwitch
+    id: aoeSafeSwitch
+    text: Safe
+    anchors.left: aoeSwitch.right
+    anchors.verticalCenter: parent.verticalCenter
+    margin-left: 5
+    width: 60
+  Button
+    id: removeButton
+    text: X
+    anchors.right: parent.right
+    anchors.verticalCenter: parent.verticalCenter
+    width: 25
+    height: 20
+    margin-left: 10
+    margin-right: 5
+    color: red
+
+AdvancedSpellCasterWindow < MainWindow
+  id: advancedSpellCasterWindow
+  !text: tr('Advanced Spell Caster')
+  size: 480 600
+  focusable: true
+  @onClose: modules.vBot.AdvancedSpellCaster.onWindowClose()
+  @onEscape: self:hide()
+  Panel
+    id: mainPanel
+    anchors.fill: parent
+    padding: 5
+
+    Button
+      id: closeWindowButton
+      !text: tr('X')
+      font: verdana-11px-rounded
+      anchors.top: parent.top
+      anchors.right: parent.right
+      margin-top: -5
+      margin-right: 3
+      size: 20 20
+      color: #FF6347
+
+    Label
+      id: spellManagementLabel
+      !text: tr('Spell Management')
+      anchors.left: parent.left
+      anchors.right: closeWindowButton.left
+      anchors.top: parent.top
+      margin-right: 5
+    HorizontalSeparator
+      id: separator1
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: spellManagementLabel.bottom
+      margin-top: 5
+    Panel
+      id: addSpellControlsPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: separator1.bottom
+      height: 60
+      margin-top: 5
+      Panel
+        id: spellNameInputPanel
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 250
+        Label
+          id: spellNameInputLabel
+          !text: tr('Spell Name:')
+          anchors.left: parent.left
+          anchors.top: parent.top
+        BotTextEdit
+          id: spellNameInput
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.top: spellNameInputLabel.bottom
+          margin-top: 2
+      Panel
+        id: spellDelayInputPanel
+        anchors.left: spellNameInputPanel.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 100
+        margin-left: 5
+        Label
+          id: spellDelayInputLabel
+          !text: tr('Cooldown (ms):')
+          anchors.left: parent.left
+          anchors.top: parent.top
+        BotTextEdit
+          id: spellDelayInput
+          anchors.left: parent.left
+          anchors.right: parent.right
+          anchors.top: spellDelayInputLabel.bottom
+          margin-top: 2
+          text-validator: /^\d*$/
+      Button
+        id: addSpellButton
+        !text: tr('Add')
+        anchors.left: spellDelayInputPanel.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: 50
+        margin-left: 5
+    Label
+      id: configuredSpellsLabel
+      !text: tr('Configured Spells:')
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: addSpellControlsPanel.bottom
+      margin-top: 10
+    Panel
+      id: bottomSectionPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      height: 185
+      padding: 5
+      margin-top: 5
+      Panel
+        id: spellOrderControlsPanel
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 35
+        Panel
+          id: buttonContainer
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.verticalCenter: parent.verticalCenter
+          width: 215
+          height: 35
+          Button
+            id: moveSpellUpButton
+            !text: tr('Up')
+            anchors.left: parent.left
+            anchors.verticalCenter: parent.verticalCenter
+            width: 60
+          Button
+            id: moveSpellDownButton
+            !text: tr('Down')
+            anchors.left: moveSpellUpButton.right
+            anchors.verticalCenter: parent.verticalCenter
+            width: 60
+            margin-left: 5
+          BotSwitch
+            id: notComboSwitch
+            text: Not Combo
+            anchors.left: moveSpellDownButton.right
+            anchors.verticalCenter: parent.verticalCenter
+            margin-left: 10
+            width: 80
+      HorizontalSeparator
+        id: separatorBelowList
+        anchors.top: spellOrderControlsPanel.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 2
+        margin-top: 5
+      Label
+        id: aoeSettingsTitle
+        !text: tr('AOE Settings')
+        anchors.top: separatorBelowList.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        text-align: center
+        margin-top: 5
+      Panel
+        id: aoeSettingsPanel
+        anchors.top: aoeSettingsTitle.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 60
+        margin-top: 5
+        Panel
+          id: minMonstersPanel
+          anchors.left: parent.left
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          width: 200
+          Label
+            id: minMonstersLabel
+            !text: tr('Min Monsters for AOE:')
+            anchors.left: parent.left
+            anchors.top: parent.top
+          BotTextEdit
+            id: minMonstersAoeInput
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: minMonstersLabel.bottom
+            margin-top: 2
+            text-validator: /^\d*$/
+        Panel
+          id: aoeRangePanel
+          anchors.left: minMonstersPanel.right
+          anchors.top: parent.top
+          anchors.bottom: parent.bottom
+          anchors.right: parent.right
+          margin-left: 5
+          Label
+            id: aoeRangeLabel
+            !text: tr('AOE Max Range:')
+            anchors.left: parent.left
+            anchors.top: parent.top
+          BotTextEdit
+            id: aoeRangeInput
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: aoeRangeLabel.bottom
+            margin-top: 2
+            text-validator: /^\d*$/
+      Button
+        id: toggleMacroButton
+        !text: tr('Enable Spell Caster')
+        anchors.top: aoeSettingsPanel.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: 25
+        margin-top: 10
+
+    TextList
+      id: spellListPanel
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: configuredSpellsLabel.bottom
+      anchors.bottom: bottomSectionPanel.top
+      margin-top: 5
+      margin-bottom: 5
+      vertical-scrollbar: spellListScrollBar
+
+    VerticalScrollBar
+      id: spellListScrollBar
+      anchors.top: spellListPanel.top
+      anchors.bottom: spellListPanel.bottom
+      anchors.right: spellListPanel.right
+      step: 30
+      pixels-scroll: false

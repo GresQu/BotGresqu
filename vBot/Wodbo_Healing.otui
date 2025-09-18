@@ -1,0 +1,217 @@
+WodboHealingWindow < MainWindow
+  id: wodboHealingWindow
+  size: 300 400
+  visible: false
+  draggable: true
+  text: Wodbo Healing Setup
+  @onEscape: self:hide()
+
+  Panel
+    id: mainContainer
+    anchors.fill: parent
+    padding: 10
+
+    Panel
+      id: healingContainer
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.top: parent.top
+      anchors.bottom: globalCooldownContainer.top
+      margin-bottom: 10
+
+      // Sekcja Senzu
+      Panel
+        id: senzuSection
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 50
+
+        Label
+          id: senzuLabel
+          text: Senzu HP
+          anchors.left: parent.left
+          anchors.top: parent.top
+          width: 80
+
+        HorizontalScrollBar
+          id: senzuScroll
+          anchors.left: senzuLabel.right
+          anchors.verticalCenter: senzuLabel.verticalCenter
+          margin-left: 10
+          width: 150
+          minimum: 1
+          maximum: 100
+          step: 1
+          value: 60
+
+        BotSwitch
+          id: enableSenzu
+          text: "60% HP"
+          anchors.left: parent.left
+          anchors.top: senzuLabel.bottom
+          margin-top: 5
+          width: 100
+
+      // Sekcja Red Senzu
+      Panel
+        id: redSenzuSection
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: senzuSection.bottom
+        height: 50
+        margin-top: 10
+
+        Label
+          id: redSenzuLabel
+          text: Red Senzu HP
+          anchors.left: parent.left
+          anchors.top: parent.top
+          width: 80
+
+        HorizontalScrollBar
+          id: redSenzuScroll
+          anchors.left: redSenzuLabel.right
+          anchors.verticalCenter: redSenzuLabel.verticalCenter
+          margin-left: 10
+          width: 150
+          minimum: 1
+          maximum: 100
+          step: 1
+          value: 30
+
+        BotSwitch
+          id: enableRedSenzu
+          text: "30% HP"
+          anchors.left: parent.left
+          anchors.top: redSenzuLabel.bottom
+          margin-top: 5
+          width: 100
+
+      // Sekcja Ultimate Potion
+      Panel
+        id: ultimatePotionSection
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: redSenzuSection.bottom
+        height: 50
+        margin-top: 10
+
+        Label
+          id: ultimatePotionLabel
+          text: Ulti Potion HP
+          anchors.left: parent.left
+          anchors.top: parent.top
+          width: 80
+
+        HorizontalScrollBar
+          id: ultimatePotionScroll
+          anchors.left: ultimatePotionLabel.right
+          anchors.verticalCenter: ultimatePotionLabel.verticalCenter
+          margin-left: 10
+          width: 150
+          minimum: 1
+          maximum: 100
+          step: 1
+          value: 80
+
+        BotSwitch
+          id: enableUltimatePotion
+          text: "80% HP"
+          anchors.left: parent.left
+          anchors.top: ultimatePotionLabel.bottom
+          margin-top: 5
+          width: 100
+
+      // Sekcja MP
+      Panel
+        id: manaSection
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: ultimatePotionSection.bottom
+        height: 50
+        margin-top: 10
+
+        Label
+          id: manaLabel
+          text: Senzu MP
+          anchors.left: parent.left
+          anchors.top: parent.top
+          width: 80
+
+        HorizontalScrollBar
+          id: manaScroll
+          anchors.left: manaLabel.right
+          anchors.verticalCenter: manaLabel.verticalCenter
+          margin-left: 10
+          width: 150
+          minimum: 1
+          maximum: 100
+          step: 1
+          value: 50
+
+        BotSwitch
+          id: enableMana
+          text: "50% MP"
+          anchors.left: parent.left
+          anchors.top: manaLabel.bottom
+          margin-top: 5
+          width: 100
+
+      // Sekcja Soul
+      Panel
+        id: soulSection
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: manaSection.bottom
+        height: 50
+        margin-top: 10
+
+        Label
+          id: rageLabel
+          text: Soul
+          anchors.left: parent.left
+          anchors.top: parent.top
+          width: 80
+
+        HorizontalScrollBar
+          id: rageScroll
+          anchors.left: rageLabel.right
+          anchors.verticalCenter: rageLabel.verticalCenter
+          margin-left: 10
+          width: 150
+          minimum: 0
+          maximum: 200
+          step: 1
+          value: 100
+
+        BotSwitch
+          id: enableRage
+          text: "100 Soul"
+          anchors.left: parent.left
+          anchors.top: rageLabel.bottom
+          margin-top: 5
+          width: 100
+
+    // Global Cooldown
+    Panel
+      id: globalCooldownContainer
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      height: 30
+
+      Label
+        id: globalCooldownLabel
+        text: Global CD (ms)
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: 100
+
+      BotTextEdit
+        id: globalCooldownEdit
+        anchors.left: globalCooldownLabel.right
+        anchors.verticalCenter: parent.verticalCenter
+        margin-left: 10
+        width: 80
+        height: 20

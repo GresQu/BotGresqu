@@ -1,0 +1,360 @@
+{
+  "spell2": "Heal Friend \"Maximo",
+  "foodItems": [
+
+  ],
+  "FiltroMobs": false,
+  "pickUpIDs": "2160,2152,3035,3043,3031,2148",
+  "spell1": "Heal Area",
+  "cooldown4": "100",
+  "FiltroPlayers": false,
+  "FiltroNpcs": false,
+  "hasteSpell": "super speed",
+  "rageBuff_manaBellow": 0,
+  "antiPushPanel": {
+    "items": [
+      3031,
+      3035,
+      0,
+      0,
+      0
+    ]
+  },
+  "buffTimerPosition": {
+    "y": 709,
+    "x": 1491
+  },
+  "ingame_hotkeys": "-- Skrypt do automatycznego w³¹czania/wy³¹czania CaveBota w zale¿noœci od HP\n-- Autor: ChatGPT | OpenAI\n-- Warunek: HP < 40% -> wy³¹cza CaveBot\n--          HP > 80% -> w³¹cza CaveBot\n\n-- Mo¿na wkleiæ jako Persistent Script\n\nlocal hpOff = 45      -- % HP do wy³¹czenia cavebota\nlocal hpOn = 80       -- % HP do ponownego w³¹czenia cavebota\nlocal checkInterval = 500  -- co ile ms sprawdzaæ HP\n\nmacro(checkInterval, \"Auto Cavebot HP Control\", function()\n    local hpPercent = hppercent()\n\n    if hpPercent < hpOff and CaveBot.isOn() then\n        CaveBot.setOn(false)\n        say(\"[Bot] HP spad³o poni¿ej \" .. hpOff .. \"%. Wy³¹czam CaveBot.\")\n    elseif hpPercent > hpOn and not CaveBot.isOn() then\n        CaveBot.setOn(true)\n        say(\"[Bot] HP powy¿ej \" .. hpOn .. \"%. W³¹czam CaveBot.\")\n    end\nend)\n",
+  "healFriendDelay": "200",
+  "powerUpBuff_healthBellow": 0,
+  "spell3Proc": "20",
+  "spell4Proc": "90",
+  "cooldown1": "100",
+  "healFriendPercent": "85",
+  "alarms": {
+    "playerDetected": true,
+    "healthValue": 40,
+    "healthBelow": false,
+    "creatureDetected": false,
+    "playerDetectedLogout": false,
+    "playerAttack": false,
+    "manaBelow": false,
+    "ignoreFriends": true,
+    "bossName": "[B]",
+    "messageText": "",
+    "manaValue": 50,
+    "enabled": false,
+    "warnBoss": false,
+    "privateMessage": false
+  },
+  "distance_attack_smart_high": "5",
+  "GodBuff_manaBellow": 0,
+  "spell1Proc": "90",
+  "advancedSpells": {
+    "macroEnabled": true,
+    "minMonstersAoe": "2",
+    "aoeRange": "3",
+    "spellList": [
+      {
+        "aoeSafe": false,
+        "aoe": true,
+        "delay": 100,
+        "pvp": false,
+        "pve": false,
+        "name": "Shock Wave",
+        "lastCast": 0
+      },
+      {
+        "aoeSafe": false,
+        "lastCast": 0,
+        "pvp": false,
+        "delay": 100,
+        "pve": true,
+        "name": "Shoge Blast",
+        "aoe": false
+      }
+    ],
+    "windowVisible": false,
+    "notComboEnabled": false
+  },
+  "moneyItems": [
+    {
+      "id": 3031,
+      "count": 1
+    },
+    {
+      "id": 3035,
+      "count": 1
+    }
+  ],
+  "friendSpellName": "Spell_Name",
+  "FiltroSkull": false,
+  "powerUpBuff_spellName": "Spell_Name",
+  "rageBuff_healthBellow": 0,
+  "cooldown3": "100",
+  "manaTrain": {
+    "max": 100,
+    "title": "MP%",
+    "on": true,
+    "min": 0,
+    "text": "Create Magic Wall"
+  },
+  "spell4": "big regeneration",
+  "ignoreDistanceWay": "deer,rabbit",
+  "FiltroParty": false,
+  "spell2Proc": "94",
+  "_icons": {
+    "cI": {
+      "y": 0.45118483412322,
+      "x": 0.14866310160428
+    },
+    "AdvSpellsIcon": {
+      "y": 0.39431279620853,
+      "x": 0.15027027027027,
+      "enabled": true
+    },
+    "Attack Low": {
+      "y": 0.34341463414634,
+      "x": 0.15120643431635,
+      "enabled": false
+    },
+    "Attack High": {
+      "y": 0.28975609756098,
+      "x": 0.15322580645161,
+      "enabled": false
+    },
+    "tI": {
+      "y": 0.49289099526066,
+      "x": 0.14705882352941
+    }
+  },
+  "friend_range": "2",
+  "senseTracker": {
+    "targetHistory": [
+
+    ],
+    "targetName": "",
+    "spellName": "sense"
+  },
+  "GodBuff_spellName": "Spell_Name",
+  "cooldown2": "100",
+  "healSpellsEnabled": {
+    "spell3": true,
+    "spell1": true,
+    "spell4": false,
+    "spell2": false
+  },
+  "scriptManager": {
+    "Bug_map": false,
+    "bless": false,
+    "AdvancedBuff": true,
+    "Sense_last_target": true,
+    "ManaTrain": true,
+    "profile_selector": true,
+    "exp_gain": true,
+    "Friend_Healer": true,
+    "Anty_push": true,
+    "ingame_editor": true,
+    "afkmsgreply": false,
+    "exchange_money": true,
+    "Attack_All": false,
+    "AutoEnergy": false,
+    "warning": true,
+    "AdvancedSpellCaster": true,
+    "Summon_Pet": false,
+    "Auto Follow": true,
+    "smartertargeting": true,
+    "Hold_Target": true,
+    "ToogleCaveTarg": true,
+    "Auto_traveler": true,
+    "trade_message": false,
+    "battleListFilters": false,
+    "effect_avoider": false,
+    "xeno_menu": true,
+    "NDBO_Chaos": false,
+    "pick_up": true,
+    "Fast_Move": true,
+    "Cast_Spell": false,
+    "Healing_item": true,
+    "eat_food": true,
+    "basic_buff": false,
+    "analyzer": false,
+    "auto_friend_party": true,
+    "spy_level": true,
+    "Attack_Back": false,
+    "AttackMonsterwithMoreHp": true,
+    "npc_talk": false,
+    "auto_follow_attacker": true,
+    "TurnToTarget": true,
+    "cavebot": true,
+    "Wodbo_Healing": false,
+    "alarms": true,
+    "healing_setup": true,
+    "StackItems": false,
+    "Speed_Up": true,
+    "myFriendList": true,
+    "Containers": true
+  },
+  "ignoreCreatures": "deer,rabbit",
+  "_configs": {
+    "cavebot_configs": {
+      "enabled": false,
+      "selected": "icecity_paiku"
+    },
+    "targetbot_configs": {
+      "enabled": false,
+      "selected": "bosy"
+    }
+  },
+  "GodBuff_cooldown": 75,
+  "rageBuff_spellName": "Mega Power Up",
+  "itemHealing": {
+    "pve": {
+      "mana3enabled": false,
+      "hpItem2": 0,
+      "hp2enabled": false,
+      "maxMana1": 90,
+      "manaItem1": 236,
+      "maxHp3": 90,
+      "mana2enabled": false,
+      "hpItem3": 0,
+      "minMana1": 0,
+      "maxHp2": 90,
+      "mana1enabled": true,
+      "minMana2": 0,
+      "maxMana3": 90,
+      "minHp2": 0,
+      "maxHp1": 55,
+      "hpItem1": 236,
+      "minMana3": 0,
+      "hp3enabled": false,
+      "manaItem2": 0,
+      "hp1enabled": true,
+      "minHp1": 0,
+      "maxMana2": 90,
+      "minHp3": 0,
+      "manaItem3": 0
+    },
+    "currentMode": "pve",
+    "pvp": {
+      "mana3enabled": false,
+      "hpItem2": 0,
+      "hp2enabled": false,
+      "maxMana1": 90,
+      "manaItem1": 0,
+      "maxHp3": 90,
+      "mana2enabled": false,
+      "hpItem3": 0,
+      "minMana1": 0,
+      "maxHp2": 90,
+      "mana1enabled": false,
+      "minMana2": 0,
+      "maxMana3": 90,
+      "minHp2": 0,
+      "maxHp1": 90,
+      "hpItem1": 0,
+      "minMana3": 0,
+      "hp3enabled": false,
+      "manaItem2": 0,
+      "hp1enabled": false,
+      "minHp1": 0,
+      "maxMana2": 90,
+      "minHp3": 0,
+      "manaItem3": 0
+    }
+  },
+  "autofollow": {
+    "player": "Gresqu"
+  },
+  "GodBuff_healthBellow": 0,
+  "extras": {
+    "timers": false,
+    "pathfinding": true,
+    "gotoMaxDistance": 30,
+    "checkPlayer": false,
+    "looting": 40,
+    "killUnder": 1,
+    "joinBot": false,
+    "lootDelay": 200,
+    "autoOpenDoors": false,
+    "nextBackpack": false,
+    "huntRoutes": 50,
+    "antiKick": false,
+    "talkDelay": 1000,
+    "bless": true,
+    "separatePm": false,
+    "title": false,
+    "height": 360,
+    "reachable": true
+  },
+  "_macros": {
+    "": false,
+    "Follow Change": false,
+    "Attack Low": false,
+    "Bug Map": false,
+    "Auto Cavebot HP Control": false,
+    "Speed Up": true,
+    "Start": true,
+    "AntyStuck": false,
+    "Move Left-Right": false,
+    "Attack High": false,
+    "Follow Attack": false,
+    "First_Buff": true,
+    "Follow": false
+  },
+  "rageBuff_cooldown": 30,
+  "powerUpBuff_cooldown": 60,
+  "AutoRevide": {
+    "pausedTarget": false,
+    "pausedCave": false
+  },
+  "renameContainers": {
+    "purse": true,
+    "enabled": false,
+    "height": 170,
+    "list": [
+      {
+        "items": [
+          3081,
+          3048
+        ],
+        "value": "Main Backpack",
+        "item": 9601,
+        "min": false,
+        "enabled": true
+      },
+      {
+        "items": [
+          3161,
+          3180
+        ],
+        "value": "Runes",
+        "item": 2866,
+        "min": true,
+        "enabled": true
+      },
+      {
+        "items": [
+          3031,
+          3035,
+          3043
+        ],
+        "value": "Money",
+        "item": 2871,
+        "min": true,
+        "enabled": true
+      },
+      {
+        "items": [
+
+        ],
+        "value": "Purse",
+        "item": 23396,
+        "min": true,
+        "enabled": true
+      }
+    ]
+  },
+  "spell3": "Ki Defense",
+  "powerUpBuff_manaBellow": 0
+}

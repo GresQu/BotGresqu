@@ -1,0 +1,84 @@
+ScriptManagerWindow < MainWindow
+  id: scriptManagerWindow
+  size: 400 600
+  text: Script Manager
+  visible: false
+  draggable: true
+  @onEscape: self:hide()
+
+  Panel
+    id: scriptsContainer
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: bottomPanel.top
+    width: 350
+    padding: 10
+    margin-bottom: 10
+
+    Label
+      id: scriptsHeader
+      text: Available Scripts
+      font: verdana-11px-rounded
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+      text-align: center
+
+    ScrollablePanel
+      id: scriptList
+      anchors.top: scriptsHeader.bottom
+      anchors.left: parent.left
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-top: 10
+      vertical-scrollbar: scriptListScrollBar
+      layout:
+        type: verticalBox
+        spacing: 5
+
+    VerticalScrollBar
+      id: scriptListScrollBar
+      anchors.top: scriptList.top
+      anchors.bottom: scriptList.bottom
+      anchors.right: scriptList.right
+      step: 14
+      pixels-scroll: true
+
+  Panel
+    id: bottomPanel
+    height: 45
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeHintButton.top
+    margin: 10
+
+    Button
+      id: selectAllButton
+      !text: tr('Select All')
+      width: 100
+      anchors.left: parent.left
+      anchors.verticalCenter: parent.verticalCenter
+
+    Button
+      id: unselectAllButton
+      !text: tr('Unselect All')
+      width: 100
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.verticalCenter: parent.verticalCenter
+
+    Button
+      id: applyButton
+      !text: tr('Apply && Restart')
+      width: 110
+      anchors.right: parent.right
+      anchors.verticalCenter: parent.verticalCenter
+
+  Button
+    id: closeHintButton
+    text: Press Esc to Close or Click There
+    width: 300
+    height: 25
+    anchors.bottom: parent.bottom
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-bottom: 5
+    @onClick: self:getParent():hide()

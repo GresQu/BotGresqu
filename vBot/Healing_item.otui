@@ -1,0 +1,383 @@
+ItemHealingWindow < MainWindow
+  id: itemHealingWindow
+  size: 600 320
+  visible: false
+  draggable: true
+  text: Item Healing Setup
+  @onEscape: self:hide()
+
+  Panel
+    id: hpContainer
+    anchors.left: parent.left
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 270
+    padding: 10
+
+    Label
+      id: hpHeader
+      text: HP Items
+      font: verdana-11px-rounded
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      text-align: center
+
+    // HP Item 1
+    BotItem
+      id: hpItem1
+      anchors.left: parent.left
+      anchors.top: hpHeader.bottom
+      margin-top: 10
+      width: 35
+      height: 35
+
+    Label
+      id: minHp1Label
+      text: Min HP%:
+      anchors.left: hpItem1.right
+      anchors.top: hpHeader.bottom
+      margin-left: 15
+      margin-top: 10
+      width: 60
+
+    HorizontalScrollBar
+      id: minHp1Scroll
+      anchors.left: minHp1Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: minHp1Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    Label
+      id: maxHp1Label
+      text: Max HP%:
+      anchors.left: hpItem1.right
+      anchors.top: minHp1Label.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: maxHp1Scroll
+      anchors.left: maxHp1Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: maxHp1Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    BotSwitch
+      id: enableHp1
+      text: Enable
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: maxHp1Scroll.bottom
+      margin-top: 5
+      width: 180
+      height: 20
+
+    // HP Item 2
+    BotItem
+      id: hpItem2
+      anchors.left: parent.left
+      anchors.top: enableHp1.bottom
+      margin-top: 15
+      width: 35
+      height: 35
+
+    Label
+      id: minHp2Label
+      text: Min HP%:
+      anchors.left: hpItem2.right
+      anchors.top: enableHp1.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: minHp2Scroll
+      anchors.left: minHp2Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: minHp2Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    Label
+      id: maxHp2Label
+      text: Max HP%:
+      anchors.left: hpItem2.right
+      anchors.top: minHp2Label.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: maxHp2Scroll
+      anchors.left: maxHp2Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: maxHp2Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    BotSwitch
+      id: enableHp2
+      text: Enable
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: maxHp2Scroll.bottom
+      margin-top: 5
+      width: 180
+      height: 20
+
+    // HP Item 3
+    BotItem
+      id: hpItem3
+      anchors.left: parent.left
+      anchors.top: enableHp2.bottom
+      margin-top: 15
+      width: 35
+      height: 35
+
+    Label
+      id: minHp3Label
+      text: Min HP%:
+      anchors.left: hpItem3.right
+      anchors.top: enableHp2.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: minHp3Scroll
+      anchors.left: minHp3Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: minHp3Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    Label
+      id: maxHp3Label
+      text: Max HP%:
+      anchors.left: hpItem3.right
+      anchors.top: minHp3Label.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: maxHp3Scroll
+      anchors.left: maxHp3Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: maxHp3Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    BotSwitch
+      id: enableHp3
+      text: Enable
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: maxHp3Scroll.bottom
+      margin-top: 5
+      width: 180
+      height: 20
+
+  VerticalSeparator
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    margin-top: 10
+    margin-bottom: 10
+
+  Panel
+    id: manaContainer
+    anchors.right: parent.right
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    width: 270
+    padding: 10
+    margin-right: 10
+
+    Label
+      id: manaHeader
+      text: Mana Items
+      font: verdana-11px-rounded
+      anchors.top: parent.top
+      anchors.horizontalCenter: parent.horizontalCenter
+      text-align: center
+
+    // Mana Item 1
+    BotItem
+      id: manaItem1
+      anchors.left: parent.left
+      anchors.top: manaHeader.bottom
+      margin-top: 10
+      width: 35
+      height: 35
+
+    Label
+      id: minMana1Label
+      text: Min MP%:
+      anchors.left: manaItem1.right
+      anchors.top: manaHeader.bottom
+      margin-left: 15
+      margin-top: 10
+      width: 60
+
+    HorizontalScrollBar
+      id: minMana1Scroll
+      anchors.left: minMana1Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: minMana1Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    Label
+      id: maxMana1Label
+      text: Max MP%:
+      anchors.left: manaItem1.right
+      anchors.top: minMana1Label.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: maxMana1Scroll
+      anchors.left: maxMana1Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: maxMana1Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    BotSwitch
+      id: enableMana1
+      text: Enable
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: maxMana1Scroll.bottom
+      margin-top: 5
+      width: 180
+      height: 20
+
+    // Mana Item 2
+    BotItem
+      id: manaItem2
+      anchors.left: parent.left
+      anchors.top: enableMana1.bottom
+      margin-top: 15
+      width: 35
+      height: 35
+
+    Label
+      id: minMana2Label
+      text: Min MP%:
+      anchors.left: manaItem2.right
+      anchors.top: enableMana1.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: minMana2Scroll
+      anchors.left: minMana2Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: minMana2Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    Label
+      id: maxMana2Label
+      text: Max MP%:
+      anchors.left: manaItem2.right
+      anchors.top: minMana2Label.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: maxMana2Scroll
+      anchors.left: maxMana2Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: maxMana2Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    BotSwitch
+      id: enableMana2
+      text: Enable
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: maxMana2Scroll.bottom
+      margin-top: 5
+      width: 180
+      height: 20
+
+    // Mana Item 3
+    BotItem
+      id: manaItem3
+      anchors.left: parent.left
+      anchors.top: enableMana2.bottom
+      margin-top: 15
+      width: 35
+      height: 35
+
+    Label
+      id: minMana3Label
+      text: Min MP%:
+      anchors.left: manaItem3.right
+      anchors.top: enableMana2.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: minMana3Scroll
+      anchors.left: minMana3Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: minMana3Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    Label
+      id: maxMana3Label
+      text: Max MP%:
+      anchors.left: manaItem3.right
+      anchors.top: minMana3Label.bottom
+      margin-left: 15
+      margin-top: 15
+      width: 60
+
+    HorizontalScrollBar
+      id: maxMana3Scroll
+      anchors.left: maxMana3Label.right
+      anchors.right: parent.right
+      anchors.verticalCenter: maxMana3Label.verticalCenter
+      margin-left: 10
+      minimum: 0
+      maximum: 100
+      step: 1
+
+    BotSwitch
+      id: enableMana3
+      text: Enable
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: maxMana3Scroll.bottom
+      margin-top: 5
+      width: 180
+      height: 20

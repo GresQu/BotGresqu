@@ -1,0 +1,7 @@
+setDefaultTab("Tools")
+local sep = UI.Separator()
+sep:setHeight(4)
+sep:setBackgroundColor('#A0B0C0')
+macro(2500, "bless",  function()
+  say("!bless")
+end)
