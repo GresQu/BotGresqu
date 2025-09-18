@@ -35,12 +35,13 @@ storage.scriptManager = storage.scriptManager or {}
 -- disable ustawia status skryptu na off ale nie usuwa go calkowicie, uzytkownik dalej moze go wlaczyc jesli nie jest hidden 
 scriptManager.availableScripts = {
     {name = "Warning System", id = "warning", file = "warning", hidden = true},
+    {name = "Updater", id = "Updater", file = "updater"},
     {name = "profile_selector", id = "profile_selector", file = "profile_selector_ui"},
     {name = "FriendList", id = "myFriendList", file = "myFriendList", hidden = true},
     {name = "Alarms", id = "alarms", file = "alarms"},
     {name = "Auto Friend Party", id = "auto_friend_party", file = "auto_friend_party"},
     {name = "Ingame Editor", id = "ingame_editor", file = "ingame_editor"},
-    {name = "BattleList Filters", id = "battleListFilters", file = "battleListFilters"},
+    {name = "BattleList Filters", id = "battleListFilters", file = "battleListFilters" , status = "disable"},
     {name = "NDBO_Chaos", id = "NDBO_Chaos", file = "NDBO_Chaos", status = "disable"},
     {name = "Friend_Healer", id = "Friend_Healer", file = "_x_friend_heal"},
     {name = "Advanced Spell Caster", id = "AdvancedSpellCaster", file = "AdvancedSpellCaster"},
