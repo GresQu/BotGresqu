@@ -113,6 +113,85 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
     nextFile()
 end
 
+-- Function to download fresh profiles from GitHub
+local function downloadStorageFiles(updatedFiles)
+    local storageFiles = {"profile_1.json", "profile_2.json", "profile_3.json", "profile_4.json", "profile_5.json"}
+    local index = 1
+    local profilesUpdated = 0
+    
+    local function nextProfile()
+        if index > #storageFiles then
+            -- All profiles processed
+            local totalUpdated = #updatedFiles + profilesUpdated
+            if totalUpdated > 0 then
+                warn("Smart update completed! Updated " .. #updatedFiles .. " files and " .. profilesUpdated .. " profiles.\n\nRestart the bot now to apply all changes.")
+            else
+                warn("Smart update completed! All files are up to date.\n\nRestart the bot.")
+            end
+            return
+        end
+        
+        local filename = storageFiles[index]
+        local url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/storage/" .. filename
+        local localPath = storageFolder .. "/" .. filename
+        
+        HTTP.get(url, function(content, err)
+            if not err and content and content ~= "" then
+                if saveFile(localPath, content) then
+                    profilesUpdated = profilesUpdated + 1
+                end
+            end
+            index = index + 1
+            nextProfile()
+        end)
+    end
+    
+    nextProfile()
+end
+
+-- Smart update function with reload
+local function runSmartUpdate(fileGroups)
+    local updatedFiles = {}
+    local groupIndex = 1
+    local totalGroups = #fileGroups
+    
+    -- Verify all folders exist
+    for _, group in ipairs(fileGroups) do
+        if not g_resources.directoryExists(group.folder) then
+            g_resources.makeDir(group.folder)
+        end
+    end
+    
+    updateInProgress = true
+    showUpdateProgress()
+    
+    local function processNextGroup()
+        if groupIndex > totalGroups then
+            stopUpdateProgress()
+            
+            -- STEP 1: Reload UI with new files
+            warn("Reloading UI with updated files...")
+            reload()
+            
+            -- STEP 2: Wait for reload to complete, then download fresh profiles
+            schedule(2000, function()
+                warn("Downloading fresh profiles...")
+                downloadStorageFiles(updatedFiles)
+            end)
+            return
+        end
+        
+        local group = fileGroups[groupIndex]
+        groupIndex = groupIndex + 1
+        
+        downloadFilesSequential(group.list, group.url, group.folder, updatedFiles, processNextGroup)
+    end
+    
+    warn("Starting smart update...")
+    processNextGroup()
+end
+
+-- Classic update function (unchanged)
 local function runUpdate(fileGroups, removeProfiles)
     local updatedFiles = {}
     local groupIndex = 1
@@ -203,6 +282,20 @@ local targetbotFiles = {
 }
 
 -- Buttons
+UI.Button("Smart Update", function()
+    if updateInProgress then
+        warn("Update already in progress, please wait...")
+        return
+    end
+    
+    runSmartUpdate({
+        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
+        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
+        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
+        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
+    })
+end)
+
 UI.Button("Update All + Reset Profiles", function()
     if updateInProgress then
         warn("Update already in progress, please wait...")
