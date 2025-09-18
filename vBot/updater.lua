@@ -113,17 +113,11 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
     nextFile()
 end
 
--- Update function
 local function runUpdate(fileGroups, removeProfiles)
     local updatedFiles = {}
     local groupIndex = 1
     local totalGroups = #fileGroups
     local removedProfiles = 0
-    
-    -- Remove profile files if requested
-    if removeProfiles then
-        removedProfiles = removeProfileFiles()
-    end
     
     -- Verify all folders exist
     for _, group in ipairs(fileGroups) do
@@ -138,6 +132,11 @@ local function runUpdate(fileGroups, removeProfiles)
     local function processNextGroup()
         if groupIndex > totalGroups then
             stopUpdateProgress()
+            
+            -- Remove profile files AFTER all downloads are complete
+            if removeProfiles then
+                removedProfiles = removeProfileFiles()
+            end
             
             local totalExpected = 0
             for _, group in ipairs(fileGroups) do
