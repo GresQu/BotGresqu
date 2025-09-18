@@ -41,7 +41,18 @@ local function stopUpdateProgress()
     end
 end
 
--- Enhanced save function with detailed logging
+-- Funkcja normalizująca content
+local function normalizeContent(content)
+    if not content then return nil end
+    -- Zamień Windows/Mac line endings na Unix
+    content = content:gsub('\r\n', '\n')
+    content = content:gsub('\r', '\n')
+    -- Usuń białe znaki z końca
+    content = content:gsub('%s+$', '')
+    return content
+end
+
+-- Poprawiona funkcja saveFile
 local function saveFile(path, content, filename)
     local folderPath = path:match("(.+)/[^/]+$")
     if folderPath and not g_resources.directoryExists(folderPath) then
@@ -51,7 +62,9 @@ local function saveFile(path, content, filename)
     
     if g_resources.fileExists(path) then
         local existingContent = g_resources.readFileContents(path)
-        if existingContent == content then
+        
+        -- Porównaj znormalizowaną zawartość
+        if normalizeContent(existingContent) == normalizeContent(content) then
             print("SKIPPED (up to date): " .. filename)
             return false
         end
