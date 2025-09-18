@@ -180,7 +180,7 @@ end
 
 local EffectAvoider = {
     config = {
-        enabled = true,
+        enabled = false,
         effect_ids = {1528, 1531},
         check_area = {x=6, y=6},
         maintain_distance_enabled = true,
@@ -655,24 +655,20 @@ end
 
 
 function EffectAvoider:init()
-    self:loadState() -- Load state before initializing controls
-
+    self:loadState()
+    self.active = false -- wymuszony start z wyłączonym skryptem
     if not self.activeToggle then
         self.activeToggle = addSwitch("effectAvoiderToggle", "Effect Avoider", function(widget)
             EffectAvoider.active = not EffectAvoider.active
             widget:setOn(EffectAvoider.active)
             if EffectAvoider.active then EffectAvoider:activate() else EffectAvoider:deactivate() end
         end)
-        if self.activeToggle then self.activeToggle:setOn(self.active)
-        else return end
+        self.activeToggle:setOn(self.active)
     end
-
     if not self.updateMacro then
         self.updateMacro = macro(100, function() EffectAvoider:update() end)
         self.updateMacro.setOn(self.active)
     end
-
-    -- print("Effect Avoider script initialized.")
 end
 
 EffectAvoider:init()
