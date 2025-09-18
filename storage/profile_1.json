@@ -5,100 +5,29 @@
   ],
   "distance_attack_smart_high": "2",
   "pickUpIDs": "2160,2152,3035,3043,3031,2148",
-  "GodBuff_manaBellow": 0,
-  "FiltroPlayers": false,
-  "friendSpellName": "Spell_Name",
+  "ignoreDistanceWay": "deer,rabbit",
+  "AutoRevide": {
+    "pausedTarget": false,
+    "pausedCave": false
+  },
   "hasteSpell": "Speed Up",
   "rageBuff_manaBellow": 0,
   "healFriendDelay": "200",
   "powerUpBuff_healthBellow": 0,
   "cooldown1": "100",
   "healFriendPercent": "85",
-  "antiPushPanel": {
-    "items": [
-      3031,
-      3035,
-      0,
-      0,
-      0
-    ]
-  },
-  "extras": {
-    "timers": false,
-    "pathfinding": true,
-    "gotoMaxDistance": 30,
-    "checkPlayer": false,
-    "looting": 40,
-    "killUnder": 1,
-    "joinBot": false,
-    "lootDelay": 200,
-    "autoOpenDoors": false,
-    "nextBackpack": false,
-    "huntRoutes": 50,
-    "antiKick": false,
-    "talkDelay": 1000,
-    "bless": true,
-    "title": false,
-    "separatePm": false,
-    "reachable": true
-  },
-  "spell3Proc": "90",
   "spell1Proc": "90",
-  "FiltroNpcs": false,
-  "spell4Proc": "90",
-  "moneyItems": [
-    {
-      "id": 3031,
-      "count": 1
+  "friendSpellName": "Spell_Name",
+  "_configs": {
+    "targetbot_configs": {
+      "selected": "config_name",
+      "enabled": false
     },
-    {
-      "id": 3035,
-      "count": 1
+    "cavebot_configs": {
+      "selected": "config_name",
+      "enabled": false
     }
-  ],
-  "FiltroSkull": false,
-  "AutoRevide": {
-    "pausedTarget": false,
-    "pausedCave": false
   },
-  "buffTimerPosition": {
-    "y": 100,
-    "x": 500
-  },
-  "rageBuff_spellName": "Spell_Name",
-  "_macros": {
-    "": false,
-    "Attack High": false,
-    "Attack Low": false
-  },
-  "alarms": {
-    "playerDetected": false,
-    "creatureDetected": false,
-    "healthBelow": false,
-    "healthValue": 40,
-    "playerDetectedLogout": false,
-    "playerAttack": false,
-    "manaBelow": false,
-    "ignoreFriends": true,
-    "bossName": "[B]",
-    "messageText": "",
-    "manaValue": 50,
-    "enabled": false,
-    "warnBoss": false,
-    "privateMessage": false
-  },
-  "advancedSpells": {
-    "macroEnabled": false,
-    "minMonstersAoe": "3",
-    "aoeRange": "5",
-    "spellList": [
-
-    ],
-    "windowVisible": false,
-    "notComboEnabled": false
-  },
-  "FiltroParty": false,
-  "spell2Proc": "90",
   "manaTrain": {
     "max": 100,
     "title": "MP%",
@@ -106,8 +35,45 @@
     "min": 80,
     "text": "Power Down"
   },
+  "spell3Proc": "90",
+  "GodBuff_manaBellow": 0,
+  "buffTimerPosition": {
+    "y": 100,
+    "x": 500
+  },
+  "rageBuff_spellName": "Spell_Name",
+  "senseTracker": {
+    "targetHistory": [
+
+    ],
+    "targetName": "",
+    "spellName": "sense"
+  },
+  "GodBuff_healthBellow": 0,
+  "GodBuff_cooldown": 75,
+  "rageBuff_healthBellow": 0,
+  "spell2Proc": "90",
+  "extras": {
+    "timers": false,
+    "pathfinding": true,
+    "gotoMaxDistance": 30,
+    "checkPlayer": false,
+    "separatePm": false,
+    "killUnder": 1,
+    "joinBot": false,
+    "lootDelay": 200,
+    "autoOpenDoors": false,
+    "nextBackpack": false,
+    "huntRoutes": 50,
+    "antiKick": false,
+    "title": false,
+    "talkDelay": 1000,
+    "reachable": true,
+    "looting": 40,
+    "bless": true
+  },
   "friend_range": "2",
-  "cooldown4": "100",
+  "powerUpBuff_cooldown": 60,
   "GodBuff_spellName": "Spell_Name",
   "cooldown2": "100",
   "healSpellsEnabled": {
@@ -116,74 +82,12 @@
     "spell4": false,
     "spell2": false
   },
-  "scriptManager": {
-    "Bug_map": true,
-    "bless": false,
-    "AdvancedBuff": true,
-    "Sense_last_target": true,
-    "ManaTrain": true,
-    "profile_selector": true,
-    "exp_gain": true,
-    "Friend_Healer": true,
-    "Anty_push": true,
-    "ingame_editor": true,
-    "afkmsgreply": false,
-    "exchange_money": true,
-    "Attack_All": true,
-    "AutoEnergy": false,
-    "warning": true,
-    "Fast_Move": false,
-    "Summon_Pet": false,
-    "Auto Follow": true,
-    "smartertargeting": true,
-    "Hold_Target": true,
-    "ToogleCaveTarg": true,
-    "Auto_traveler": true,
-    "trade_message": false,
-    "battleListFilters": true,
-    "effect_avoider": true,
-    "xeno_menu": true,
-    "NDBO_Chaos": false,
-    "pick_up": true,
-    "analyzer": false,
-    "Cast_Spell": false,
-    "Healing_item": true,
-    "eat_food": true,
-    "AdvancedSpellCaster": true,
-    "auto_friend_party": true,
-    "basic_buff": false,
-    "spy_level": true,
-    "Attack_Back": true,
-    "AttackMonsterwithMoreHp": true,
-    "npc_talk": false,
-    "auto_follow_attacker": true,
-    "TurnToTarget": true,
-    "StackItems": false,
-    "Wodbo_Healing": false,
-    "alarms": true,
-    "healing_setup": true,
-    "Speed_Up": true,
-    "cavebot": true,
-    "myFriendList": true,
-    "Containers": true
+  "_macros": {
+    "": false,
+    "Attack High": false,
+    "Attack Low": false
   },
-  "senseTracker": {
-    "targetHistory": [
-
-    ],
-    "targetName": "",
-    "spellName": "sense"
-  },
-  "_configs": {
-    "cavebot_configs": {
-      "enabled": false,
-      "selected": "config_name"
-    },
-    "targetbot_configs": {
-      "enabled": false,
-      "selected": "config_name"
-    }
-  },
+  "ignoreCreatures": "deer,rabbit",
   "_icons": {
     "cI": {
       "y": 0.65,
@@ -209,7 +113,31 @@
       "x": 0.01
     }
   },
-  "FiltroMobs": false,
+  "antiPushPanel": {
+    "items": [
+      3031,
+      3035,
+      0,
+      0,
+      0
+    ]
+  },
+  "alarms": {
+    "playerDetected": false,
+    "privateMessage": false,
+    "bossName": "[B]",
+    "healthValue": 40,
+    "healthBelow": false,
+    "playerAttack": false,
+    "playerDetectedLogout": false,
+    "ignoreFriends": true,
+    "manaBelow": false,
+    "messageText": "",
+    "manaValue": 50,
+    "enabled": false,
+    "warnBoss": false,
+    "creatureDetected": false
+  },
   "itemHealing": {
     "pve": {
       "mana3enabled": false,
@@ -237,7 +165,6 @@
       "minHp3": 0,
       "manaItem3": 0
     },
-    "currentMode": "pve",
     "pvp": {
       "mana3enabled": false,
       "hpItem2": 0,
@@ -263,16 +190,86 @@
       "maxMana2": 90,
       "minHp3": 0,
       "manaItem3": 0
-    }
+    },
+    "currentMode": "pve"
   },
   "autofollow": {
     "player": "name"
   },
-  "GodBuff_healthBellow": 0,
-  "ignoreDistanceWay": "deer,rabbit",
-  "GodBuff_cooldown": 75,
+  "advancedSpells": {
+    "macroEnabled": false,
+    "minMonstersAoe": "3",
+    "aoeRange": "5",
+    "spellList": [
+
+    ],
+    "windowVisible": false,
+    "notComboEnabled": false
+  },
+  "moneyItems": [
+    {
+      "count": 1,
+      "id": 3031
+    },
+    {
+      "count": 1,
+      "id": 3035
+    }
+  ],
+  "scriptManager": {
+    "Bug_map": true,
+    "bless": false,
+    "AdvancedBuff": true,
+    "Sense_last_target": true,
+    "ManaTrain": true,
+    "Updater": true,
+    "profile_selector": true,
+    "exp_gain": true,
+    "Friend_Healer": true,
+    "Anty_push": true,
+    "ingame_editor": true,
+    "afkmsgreply": false,
+    "exchange_money": true,
+    "Attack_All": true,
+    "AutoEnergy": false,
+    "warning": true,
+    "Containers": true,
+    "Summon_Pet": false,
+    "Auto Follow": true,
+    "smartertargeting": true,
+    "Hold_Target": true,
+    "ToogleCaveTarg": true,
+    "Auto_traveler": true,
+    "trade_message": false,
+    "battleListFilters": false,
+    "effect_avoider": true,
+    "xeno_menu": true,
+    "npc_talk": false,
+    "pick_up": true,
+    "Fast_Move": false,
+    "Cast_Spell": false,
+    "Healing_item": true,
+    "eat_food": true,
+    "StackItems": false,
+    "basic_buff": false,
+    "analyzer": false,
+    "cavebot": true,
+    "Speed_Up": true,
+    "AttackMonsterwithMoreHp": true,
+    "spy_level": true,
+    "auto_follow_attacker": true,
+    "TurnToTarget": true,
+    "Attack_Back": true,
+    "Wodbo_Healing": false,
+    "alarms": true,
+    "healing_setup": true,
+    "auto_friend_party": true,
+    "AdvancedSpellCaster": true,
+    "myFriendList": true,
+    "NDBO_Chaos": false
+  },
   "rageBuff_cooldown": 75,
-  "powerUpBuff_cooldown": 60,
+  "spell4Proc": "90",
   "cooldown3": "100",
   "renameContainers": {
     "purse": true,
@@ -321,6 +318,6 @@
       }
     ]
   },
-  "rageBuff_healthBellow": 0,
+  "cooldown4": "100",
   "powerUpBuff_manaBellow": 0
 }
