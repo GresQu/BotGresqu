@@ -27,7 +27,7 @@ local updateProgressEvent = nil
 -- Progress message function
 local function showUpdateProgress()
     if updateInProgress then
-        warn("Update in progress... please wait")
+        warn("Updating...")
         updateProgressEvent = schedule(8000, showUpdateProgress)
     end
 end
@@ -133,15 +133,10 @@ local function runUpdate(fileGroups)
         if groupIndex > totalGroups then
             stopUpdateProgress()
             
-            local totalExpected = 0
-            for _, group in ipairs(fileGroups) do
-                totalExpected = totalExpected + #group.list
-            end
-            
             if #updatedFiles > 0 then
-                warn("Update completed! Updated " .. #updatedFiles .. " files.\n\nClick 'Fix After Update' then restart the bot.")
+                warn("Update done. Restart bot.")
             else
-                warn("Update completed! All " .. totalExpected .. " files are up to date.\n\nRestart the bot.")
+                warn("All files up to date.")
             end
             return
         end
@@ -190,10 +185,10 @@ local targetbotFiles = {
   "creature_priority.lua", "looting.lua", "looting.otui", "target.lua", "target.otui", "walking.lua"
 }
 
--- Simplified buttons
+-- Buttons
 UI.Button("Update All", function()
     if updateInProgress then
-        warn("Update already in progress, please wait...")
+        warn("Update in progress")
         return
     end
     
@@ -207,15 +202,15 @@ end)
 
 UI.Button("Fix After Update", function()
     if updateInProgress then
-        warn("Update already in progress, please wait...")
+        warn("Wait for update")
         return
     end
     
     local removedCount = removeProfileFiles()
     
     if removedCount > 0 then
-        warn("Profiles fixed! Removed " .. removedCount .. " corrupted files.\n\nRestart the bot now.")
+        warn("Profiles fixed. Restart bot.")
     else
-        warn("No profile files found to fix.\n\nRestart the bot.")
+        warn("No profiles to fix.")
     end
 end)
