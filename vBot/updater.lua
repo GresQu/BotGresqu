@@ -113,44 +113,8 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
     nextFile()
 end
 
--- Function to download fresh profiles from GitHub
-local function downloadStorageFiles(updatedFiles)
-    local storageFiles = {"profile_1.json", "profile_2.json", "profile_3.json", "profile_4.json", "profile_5.json"}
-    local index = 1
-    local profilesUpdated = 0
-    
-    local function nextProfile()
-        if index > #storageFiles then
-            -- All profiles processed
-            local totalUpdated = #updatedFiles + profilesUpdated
-            if totalUpdated > 0 then
-                warn("Smart update completed! Updated " .. #updatedFiles .. " files and " .. profilesUpdated .. " profiles.\n\nRestart the bot now to apply all changes.")
-            else
-                warn("Smart update completed! All files are up to date.\n\nRestart the bot.")
-            end
-            return
-        end
-        
-        local filename = storageFiles[index]
-        local url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/storage/" .. filename
-        local localPath = storageFolder .. "/" .. filename
-        
-        HTTP.get(url, function(content, err)
-            if not err and content and content ~= "" then
-                if saveFile(localPath, content) then
-                    profilesUpdated = profilesUpdated + 1
-                end
-            end
-            index = index + 1
-            nextProfile()
-        end)
-    end
-    
-    nextProfile()
-end
-
--- Smart update function with reload
-local function runSmartUpdate(fileGroups)
+-- Update function
+local function runUpdate(fileGroups)
     local updatedFiles = {}
     local groupIndex = 1
     local totalGroups = #fileGroups
@@ -168,71 +132,16 @@ local function runSmartUpdate(fileGroups)
     local function processNextGroup()
         if groupIndex > totalGroups then
             stopUpdateProgress()
-            
-            -- STEP 1: Reload UI with new files
-            warn("Reloading UI with updated files...")
-            reload()
-            
-            -- STEP 2: Wait for reload to complete, then download fresh profiles
-            schedule(2000, function()
-                warn("Downloading fresh profiles...")
-                downloadStorageFiles(updatedFiles)
-            end)
-            return
-        end
-        
-        local group = fileGroups[groupIndex]
-        groupIndex = groupIndex + 1
-        
-        downloadFilesSequential(group.list, group.url, group.folder, updatedFiles, processNextGroup)
-    end
-    
-    warn("Starting smart update...")
-    processNextGroup()
-end
-
--- Classic update function (unchanged)
-local function runUpdate(fileGroups, removeProfiles)
-    local updatedFiles = {}
-    local groupIndex = 1
-    local totalGroups = #fileGroups
-    local removedProfiles = 0
-    
-    -- Verify all folders exist
-    for _, group in ipairs(fileGroups) do
-        if not g_resources.directoryExists(group.folder) then
-            g_resources.makeDir(group.folder)
-        end
-    end
-    
-    updateInProgress = true
-    showUpdateProgress()
-    
-    local function processNextGroup()
-        if groupIndex > totalGroups then
-            stopUpdateProgress()
-            
-            -- Remove profile files AFTER all downloads are complete
-            if removeProfiles then
-                removedProfiles = removeProfileFiles()
-            end
             
             local totalExpected = 0
             for _, group in ipairs(fileGroups) do
                 totalExpected = totalExpected + #group.list
             end
             
-            local totalUpdated = #updatedFiles + removedProfiles
-            
-            if totalUpdated > 0 then
-                local message = "Update completed! Updated " .. #updatedFiles .. " files"
-                if removedProfiles > 0 then
-                    message = message .. ", removed " .. removedProfiles .. " profiles"
-                end
-                message = message .. ".\n\nPlease restart the bot to apply changes."
-                warn(message)
+            if #updatedFiles > 0 then
+                warn("Update completed! Updated " .. #updatedFiles .. " files.\n\nClick 'Fix After Update' then restart the bot.")
             else
-                warn("Update completed! All " .. totalExpected .. " files are up to date.\n\nPlease restart the bot.")
+                warn("Update completed! All " .. totalExpected .. " files are up to date.\n\nRestart the bot.")
             end
             return
         end
@@ -281,14 +190,14 @@ local targetbotFiles = {
   "creature_priority.lua", "looting.lua", "looting.otui", "target.lua", "target.otui", "walking.lua"
 }
 
--- Buttons
-UI.Button("Smart Update", function()
+-- Simplified buttons
+UI.Button("Update All", function()
     if updateInProgress then
         warn("Update already in progress, please wait...")
         return
     end
     
-    runSmartUpdate({
+    runUpdate({
         {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
         {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
         {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
@@ -296,35 +205,7 @@ UI.Button("Smart Update", function()
     })
 end)
 
-UI.Button("Update All + Reset Profiles", function()
-    if updateInProgress then
-        warn("Update already in progress, please wait...")
-        return
-    end
-    
-    runUpdate({
-        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
-        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
-        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
-        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
-    }, true)
-end)
-
-UI.Button("Update Without Settings", function()
-    if updateInProgress then
-        warn("Update already in progress, please wait...")
-        return
-    end
-    
-    runUpdate({
-        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
-        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
-        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
-        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
-    }, false)
-end)
-
-UI.Button("Only Remove Profiles", function()
+UI.Button("Fix After Update", function()
     if updateInProgress then
         warn("Update already in progress, please wait...")
         return
@@ -333,8 +214,8 @@ UI.Button("Only Remove Profiles", function()
     local removedCount = removeProfileFiles()
     
     if removedCount > 0 then
-        warn("Profile removal completed! Removed " .. removedCount .. " files.\n\nPlease restart the bot to recreate defaults.")
+        warn("Profiles fixed! Removed " .. removedCount .. " corrupted files.\n\nRestart the bot now.")
     else
-        warn("Profile removal completed! No profile files found.")
+        warn("No profile files found to fix.\n\nRestart the bot.")
     end
 end)
