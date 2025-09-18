@@ -153,7 +153,7 @@ end
 
 -- File lists
 local vBotFiles = {
-  "AdvancedBuff.lua", "AdvancedSpellCaster.lua", "AdvancedSpellCaster.otui", "Anty_push.lua",
+  "updater.lua", "AdvancedBuff.lua", "AdvancedSpellCaster.lua", "AdvancedSpellCaster.otui", "Anty_push.lua",
   "AttackMonsterwithMoreHp.lua", "Attack_All.lua", "Attack_Back.lua", "AutoEnergy.lua",
   "AutoFollowName.lua", "Auto_traveler.lua", "Bug_map.lua", "Containers.lua", "Healing_item.lua",
   "Healing_item.otui", "ManaTrain.lua", "MoveEW.lua", "NDBO_Chaos.lua", "Sense_last_target.lua",
@@ -167,7 +167,7 @@ local vBotFiles = {
   "ingame_editor.lua", "items.lua", "myFriendList.lua", "new_cavebot_lib.lua", "npc_talk.lua",
   "pick_up.lua", "profile_changer.lua", "profile_selector_ui.lua", "smartertargeting.lua",
   "spy_level.lua", "trade_message.lua", "version.txt", "vlib.lua", "warning.lua", "xeno_menu.lua",
-  "_Loader.otui", "updater.lua"
+  "_Loader.otui"
 }
 
 local mainFiles = { "_Loader.lua" }
