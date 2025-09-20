@@ -15,7 +15,7 @@ local targetbotFolder = "bot/" .. configName .. "/targetbot"
 local updateInProgress = false
 local updateProgressEvent = nil
 
--- Progress functions
+-- Progress functions BEZ removeEvent
 local function showUpdateProgress()
     if updateInProgress then
         warn("Updating...")
@@ -25,19 +25,16 @@ end
 
 local function stopUpdateProgress()
     updateInProgress = false
-    if updateProgressEvent then
-        removeEvent(updateProgressEvent)
-        updateProgressEvent = nil
-    end
+    -- Nie usuwamy eventu, po prostu zmieniamy flagę
 end
 
--- HTTP with timeout
+-- HTTP BEZ removeEvent - używamy flagi
 local function safeHTTPGet(url, callback, timeout)
     timeout = timeout or 15000
     local completed = false
-    local timeoutEvent
     
-    timeoutEvent = scheduleEvent(function()
+    -- Timeout przez flagę zamiast removeEvent
+    scheduleEvent(function()
         if not completed then
             completed = true
             warn("TIMEOUT: " .. url:match("[^/]+$"))
@@ -48,12 +45,11 @@ local function safeHTTPGet(url, callback, timeout)
     HTTP.get(url, function(content, err)
         if completed then return end
         completed = true
-        removeEvent(timeoutEvent)
         callback(content, err)
     end)
 end
 
--- Download function
+-- Download function (bez zmian)
 local function downloadFilesSequential(fileList, urlBase, folder, results, onComplete)
     local index = 1
     
@@ -114,7 +110,7 @@ local function downloadFilesSequential(fileList, urlBase, folder, results, onCom
     nextFile()
 end
 
--- Main update function
+-- Main update function (bez zmian)
 local function runUpdate(fileGroups)
     local results = {
         updated = 0, identical = 0, errors = 0
@@ -153,7 +149,7 @@ local function runUpdate(fileGroups)
     processNextGroup()
 end
 
--- File lists (twoje oryginalne listy)
+-- File lists (twoje listy bez zmian)
 local vBotFiles = {
   "updater.lua", "AdvancedBuff.lua", "AdvancedSpellCaster.lua", "AdvancedSpellCaster.otui", "Anty_push.lua",
   "AttackMonsterwithMoreHp.lua", "Attack_All.lua", "Attack_Back.lua", "AutoEnergy.lua",
