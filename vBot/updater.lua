@@ -1,5 +1,4 @@
 local HTTP = modules._G.HTTP
-
 -- Detect current config
 local function detectConfigName()
     local configs = g_resources.listDirectoryFiles("bot", false, true)
@@ -10,20 +9,16 @@ local function detectConfigName()
     end
     return nil
 end
-
 local configName = detectConfigName() or "default"
-
 -- Folders
 local vBotFolder = "bot/" .. configName .. "/vBot"
 local configFolder = "bot/" .. configName
 local storageFolder = "bot/" .. configName .. "/storage"
 local cavebotFolder = "bot/" .. configName .. "/cavebot"
 local targetbotFolder = "bot/" .. configName .. "/targetbot"
-
 -- Global variable for update status
 local updateInProgress = false
 local updateProgressEvent = nil
-
 -- Progress message function
 local function showUpdateProgress()
     if updateInProgress then
@@ -31,7 +26,6 @@ local function showUpdateProgress()
         updateProgressEvent = schedule(8000, showUpdateProgress)
     end
 end
-
 -- Stop progress messages
 local function stopUpdateProgress()
     updateInProgress = false
@@ -40,7 +34,6 @@ local function stopUpdateProgress()
         updateProgressEvent = nil
     end
 end
-
 -- Function to remove profile files from storage
 local function removeProfileFiles()
     local removedCount = 0
@@ -52,13 +45,13 @@ local function removeProfileFiles()
             local success = g_resources.deleteFile(profilePath)
             if success then
                 removedCount = removedCount + 1
+                warn("Removed profile: " .. filename)
             end
         end
     end
     
     return removedCount
 end
-
 -- Normalize content for better comparison
 local function normalizeContent(content)
     if not content then return nil end
@@ -67,8 +60,7 @@ local function normalizeContent(content)
     content = content:gsub('%s+$', '')
     return content
 end
-
--- Save function
+-- Enhanced save function with logging
 local function saveFile(path, content)
     local folderPath = path:match("(.+)/[^/]+$")
     if folderPath and not g_resources.directoryExists(folderPath) then
@@ -78,16 +70,22 @@ local function saveFile(path, content)
     if g_resources.fileExists(path) then
         local existingContent = g_resources.readFileContents(path)
         if normalizeContent(existingContent) == normalizeContent(content) then
-            return false
+            warn("IDENTICAL: " .. path:match("[^/]+$"))
+            return "identical"
         end
     end
     
     local success = g_resources.writeFileContents(path, content)
-    return success
+    if success then
+        warn("UPDATED: " .. path:match("[^/]+$"))
+        return "updated"
+    else
+        warn("FAILED TO SAVE: " .. path:match("[^/]+$"))
+        return "failed"
+    end
 end
-
--- Sequential download
-local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, onComplete)
+-- Enhanced sequential download with detailed logging
+local function downloadFilesSequential(fileList, urlBase, folder, results, onComplete)
     local index = 1
     
     local function nextFile()
@@ -100,22 +98,48 @@ local function downloadFilesSequential(fileList, urlBase, folder, updatedFiles, 
         local url = urlBase .. filename
         local localPath = folder .. "/" .. filename
         
+        warn("Downloading: " .. filename)
+        
         HTTP.get(url, function(content, err)
-            if not err and content and content ~= "" then
-                if saveFile(localPath, content) then
-                    table.insert(updatedFiles, filename)
+            if err then
+                warn("HTTP ERROR: " .. filename .. " - " .. tostring(err))
+                results.errors = results.errors + 1
+                table.insert(results.errorFiles, filename)
+            elseif not content or content == "" then
+                warn("EMPTY RESPONSE: " .. filename)
+                results.errors = results.errors + 1
+                table.insert(results.errorFiles, filename)
+            else
+                local saveResult = saveFile(localPath, content)
+                if saveResult == "updated" then
+                    results.updated = results.updated + 1
+                    table.insert(results.updatedFiles, filename)
+                elseif saveResult == "identical" then
+                    results.identical = results.identical + 1
+                    table.insert(results.identicalFiles, filename)
+                else
+                    results.errors = results.errors + 1
+                    table.insert(results.errorFiles, filename)
                 end
             end
+            
             index = index + 1
-            nextFile()
+            scheduleEvent(nextFile, 100) -- Small delay between requests
         end)
     end
     nextFile()
 end
-
--- Update function
+-- Enhanced update function with detailed results
 local function runUpdate(fileGroups)
-    local updatedFiles = {}
+    local results = {
+        updated = 0,
+        identical = 0, 
+        errors = 0,
+        updatedFiles = {},
+        identicalFiles = {},
+        errorFiles = {}
+    }
+    
     local groupIndex = 1
     local totalGroups = #fileGroups
     
@@ -123,6 +147,7 @@ local function runUpdate(fileGroups)
     for _, group in ipairs(fileGroups) do
         if not g_resources.directoryExists(group.folder) then
             g_resources.makeDir(group.folder)
+            warn("Created folder: " .. group.folder)
         end
     end
     
@@ -133,25 +158,44 @@ local function runUpdate(fileGroups)
         if groupIndex > totalGroups then
             stopUpdateProgress()
             
-            if #updatedFiles > 0 then
+            -- Detailed summary
+            warn("=== UPDATE SUMMARY ===")
+            warn("Updated files: " .. results.updated)
+            warn("Identical files: " .. results.identical)
+            warn("Failed files: " .. results.errors)
+            warn("Total processed: " .. (results.updated + results.identical + results.errors))
+            
+            if results.updated > 0 then
+                warn("=== UPDATED FILES ===")
+                for _, file in ipairs(results.updatedFiles) do
+                    warn("  • " .. file)
+                end
                 warn("Update done. Restart bot.")
             else
                 warn("All files up to date.")
             end
+            
+            if results.errors > 0 then
+                warn("=== FAILED FILES ===")
+                for _, file in ipairs(results.errorFiles) do
+                    warn("  ✗ " .. file)
+                end
+            end
+            
             return
         end
         
         local group = fileGroups[groupIndex]
+        warn("Processing group " .. groupIndex .. "/" .. totalGroups .. ": " .. group.folder)
         groupIndex = groupIndex + 1
         
-        downloadFilesSequential(group.list, group.url, group.folder, updatedFiles, processNextGroup)
+        downloadFilesSequential(group.list, group.url, group.folder, results, processNextGroup)
     end
     
     warn("Starting update...")
     processNextGroup()
 end
-
--- File lists
+-- File lists (same as before)
 local vBotFiles = {
   "updater.lua", "AdvancedBuff.lua", "AdvancedSpellCaster.lua", "AdvancedSpellCaster.otui", "Anty_push.lua",
   "AttackMonsterwithMoreHp.lua", "Attack_All.lua", "Attack_Back.lua", "AutoEnergy.lua",
@@ -169,9 +213,7 @@ local vBotFiles = {
   "spy_level.lua", "trade_message.lua", "version.txt", "vlib.lua", "warning.lua", "xeno_menu.lua",
   "_Loader.otui"
 }
-
 local mainFiles = { "_Loader.lua" }
-
 local cavebotFiles = {
   "actions.lua", "cavebot.lua", "cavebot.otui", "clear_tile.lua",
   "config.lua", "config.otui", "doors.lua", "editor.lua",
@@ -179,13 +221,11 @@ local cavebotFiles = {
   "lure.lua", "minimap.lua", "pos_check.lua", "recorder.lua",
   "stand_lure.lua", "travel.lua", "walking.lua"
 }
-
 local targetbotFiles = {
   "creature.lua", "creature_attack.lua", "creature_editor.lua", "creature_editor.otui",
   "creature_priority.lua", "looting.lua", "looting.otui", "target.lua", "target.otui", "walking.lua"
 }
-
--- Buttons
+-- Buttons (same as before)
 UI.Button("Update All", function()
     if updateInProgress then
         warn("Update in progress")
@@ -199,7 +239,6 @@ UI.Button("Update All", function()
         {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
     })
 end)
-
 UI.Button("Fix After Update", function()
     if updateInProgress then
         warn("Wait for update")
