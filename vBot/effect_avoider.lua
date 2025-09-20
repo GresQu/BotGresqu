@@ -180,7 +180,7 @@ end
 
 local EffectAvoider = {
     config = {
-        enabled = false,
+        enabled = true,
         effect_ids = {376},
         check_area = {x=6, y=6},
         maintain_distance_enabled = true,
