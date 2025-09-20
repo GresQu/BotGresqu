@@ -1,5 +1,3 @@
--- Lista plików do aktualizacji
-
 local fileLists = {}
 
 fileLists.vBotFiles = {
