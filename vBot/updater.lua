@@ -197,10 +197,10 @@ UI.Button("Update All", function()
     end
     
     runUpdate({
-        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/vBot/", folder = vBotFolder},
-        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/", folder = configFolder},
-        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/cavebot/", folder = cavebotFolder},
-        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
+        {list = vBotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/refs/heads/main/vBot/", folder = vBotFolder},
+        {list = mainFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/refs/heads/main/", folder = configFolder},
+        {list = cavebotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/refs/heads/main/cavebot/", folder = cavebotFolder},
+        {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/refs/heads/main/targetbot/", folder = targetbotFolder}
     })
 end)
 
