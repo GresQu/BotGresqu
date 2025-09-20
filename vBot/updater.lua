@@ -1,32 +1,28 @@
 local HTTP = modules._G.HTTP
--- Detect current config
-local function detectConfigName()
-    local configs = g_resources.listDirectoryFiles("bot", false, true)
-    for _, config in ipairs(configs) do
-        if g_resources.directoryExists("bot/" .. config .. "/vBot") then
-            return config
-        end
-    end
-    return nil
-end
-local configName = detectConfigName() or "default"
+
+-- Pobierz aktualny config tak jak w loaderze
+local configName = modules.game_bot.contentsPanel.config:getCurrentOption().text
+warn("Using config: " .. configName)
+
 -- Folders
 local vBotFolder = "bot/" .. configName .. "/vBot"
 local configFolder = "bot/" .. configName
 local storageFolder = "bot/" .. configName .. "/storage"
 local cavebotFolder = "bot/" .. configName .. "/cavebot"
 local targetbotFolder = "bot/" .. configName .. "/targetbot"
--- Global variable for update status
+
+-- Global variables
 local updateInProgress = false
 local updateProgressEvent = nil
--- Progress message function
+
+-- Progress functions
 local function showUpdateProgress()
     if updateInProgress then
         warn("Updating...")
         updateProgressEvent = schedule(8000, showUpdateProgress)
     end
 end
--- Stop progress messages
+
 local function stopUpdateProgress()
     updateInProgress = false
     if updateProgressEvent then
@@ -34,57 +30,30 @@ local function stopUpdateProgress()
         updateProgressEvent = nil
     end
 end
--- Function to remove profile files from storage
-local function removeProfileFiles()
-    local removedCount = 0
-    local profileFiles = {"profile_1.json", "profile_2.json", "profile_3.json", "profile_4.json", "profile_5.json"}
+
+-- HTTP with timeout
+local function safeHTTPGet(url, callback, timeout)
+    timeout = timeout or 15000
+    local completed = false
+    local timeoutEvent
     
-    for _, filename in ipairs(profileFiles) do
-        local profilePath = storageFolder .. "/" .. filename
-        if g_resources.fileExists(profilePath) then
-            local success = g_resources.deleteFile(profilePath)
-            if success then
-                removedCount = removedCount + 1
-                warn("Removed profile: " .. filename)
-            end
+    timeoutEvent = scheduleEvent(function()
+        if not completed then
+            completed = true
+            warn("TIMEOUT: " .. url:match("[^/]+$"))
+            callback(nil, "Timeout")
         end
-    end
+    end, timeout)
     
-    return removedCount
+    HTTP.get(url, function(content, err)
+        if completed then return end
+        completed = true
+        removeEvent(timeoutEvent)
+        callback(content, err)
+    end)
 end
--- Normalize content for better comparison
-local function normalizeContent(content)
-    if not content then return nil end
-    content = content:gsub('\r\n', '\n')
-    content = content:gsub('\r', '\n')
-    content = content:gsub('%s+$', '')
-    return content
-end
--- Enhanced save function with logging
-local function saveFile(path, content)
-    local folderPath = path:match("(.+)/[^/]+$")
-    if folderPath and not g_resources.directoryExists(folderPath) then
-        g_resources.makeDir(folderPath)
-    end
-    
-    if g_resources.fileExists(path) then
-        local existingContent = g_resources.readFileContents(path)
-        if normalizeContent(existingContent) == normalizeContent(content) then
-            warn("IDENTICAL: " .. path:match("[^/]+$"))
-            return "identical"
-        end
-    end
-    
-    local success = g_resources.writeFileContents(path, content)
-    if success then
-        warn("UPDATED: " .. path:match("[^/]+$"))
-        return "updated"
-    else
-        warn("FAILED TO SAVE: " .. path:match("[^/]+$"))
-        return "failed"
-    end
-end
--- Enhanced sequential download with detailed logging
+
+-- Download function
 local function downloadFilesSequential(fileList, urlBase, folder, results, onComplete)
     local index = 1
     
@@ -98,58 +67,61 @@ local function downloadFilesSequential(fileList, urlBase, folder, results, onCom
         local url = urlBase .. filename
         local localPath = folder .. "/" .. filename
         
-        warn("Downloading: " .. filename)
+        warn("Downloading " .. index .. "/" .. #fileList .. ": " .. filename)
         
-        HTTP.get(url, function(content, err)
+        safeHTTPGet(url, function(content, err)
             if err then
-                warn("HTTP ERROR: " .. filename .. " - " .. tostring(err))
+                warn("ERROR: " .. filename .. " - " .. tostring(err))
                 results.errors = results.errors + 1
-                table.insert(results.errorFiles, filename)
-            elseif not content or content == "" then
-                warn("EMPTY RESPONSE: " .. filename)
+            elseif not content or content == "" or content:find("404") then
+                warn("FAILED: " .. filename)
                 results.errors = results.errors + 1
-                table.insert(results.errorFiles, filename)
             else
-                local saveResult = saveFile(localPath, content)
-                if saveResult == "updated" then
-                    results.updated = results.updated + 1
-                    table.insert(results.updatedFiles, filename)
-                elseif saveResult == "identical" then
-                    results.identical = results.identical + 1
-                    table.insert(results.identicalFiles, filename)
-                else
-                    results.errors = results.errors + 1
-                    table.insert(results.errorFiles, filename)
+                -- Check if file is different
+                local saveResult = "new"
+                if g_resources.fileExists(localPath) then
+                    local existing = g_resources.readFileContents(localPath)
+                    if existing == content then
+                        warn("IDENTICAL: " .. filename)
+                        results.identical = results.identical + 1
+                        saveResult = "identical"
+                    end
+                end
+                
+                -- Save if different
+                if saveResult ~= "identical" then
+                    local folderPath = localPath:match("(.+)/[^/]+$")
+                    if folderPath and not g_resources.directoryExists(folderPath) then
+                        g_resources.makeDir(folderPath)
+                    end
+                    
+                    local success = g_resources.writeFileContents(localPath, content)
+                    if success then
+                        warn("UPDATED: " .. filename)
+                        results.updated = results.updated + 1
+                    else
+                        warn("SAVE FAILED: " .. filename)
+                        results.errors = results.errors + 1
+                    end
                 end
             end
             
             index = index + 1
-            scheduleEvent(nextFile, 100) -- Small delay between requests
+            scheduleEvent(nextFile, 300) -- 300ms delay
         end)
     end
+    
     nextFile()
 end
--- Enhanced update function with detailed results
+
+-- Main update function
 local function runUpdate(fileGroups)
     local results = {
-        updated = 0,
-        identical = 0, 
-        errors = 0,
-        updatedFiles = {},
-        identicalFiles = {},
-        errorFiles = {}
+        updated = 0, identical = 0, errors = 0
     }
     
     local groupIndex = 1
     local totalGroups = #fileGroups
-    
-    -- Verify all folders exist
-    for _, group in ipairs(fileGroups) do
-        if not g_resources.directoryExists(group.folder) then
-            g_resources.makeDir(group.folder)
-            warn("Created folder: " .. group.folder)
-        end
-    end
     
     updateInProgress = true
     showUpdateProgress()
@@ -157,36 +129,21 @@ local function runUpdate(fileGroups)
     local function processNextGroup()
         if groupIndex > totalGroups then
             stopUpdateProgress()
-            
-            -- Detailed summary
             warn("=== UPDATE SUMMARY ===")
-            warn("Updated files: " .. results.updated)
-            warn("Identical files: " .. results.identical)
-            warn("Failed files: " .. results.errors)
-            warn("Total processed: " .. (results.updated + results.identical + results.errors))
+            warn("Updated: " .. results.updated)
+            warn("Identical: " .. results.identical) 
+            warn("Errors: " .. results.errors)
             
             if results.updated > 0 then
-                warn("=== UPDATED FILES ===")
-                for _, file in ipairs(results.updatedFiles) do
-                    warn("  • " .. file)
-                end
-                warn("Update done. Restart bot.")
+                warn("RESTART BOT!")
             else
                 warn("All files up to date.")
             end
-            
-            if results.errors > 0 then
-                warn("=== FAILED FILES ===")
-                for _, file in ipairs(results.errorFiles) do
-                    warn("  ✗ " .. file)
-                end
-            end
-            
             return
         end
         
         local group = fileGroups[groupIndex]
-        warn("Processing group " .. groupIndex .. "/" .. totalGroups .. ": " .. group.folder)
+        warn("Processing: " .. group.folder:match("[^/]+$"))
         groupIndex = groupIndex + 1
         
         downloadFilesSequential(group.list, group.url, group.folder, results, processNextGroup)
@@ -195,7 +152,8 @@ local function runUpdate(fileGroups)
     warn("Starting update...")
     processNextGroup()
 end
--- File lists (same as before)
+
+-- File lists (twoje oryginalne listy)
 local vBotFiles = {
   "updater.lua", "AdvancedBuff.lua", "AdvancedSpellCaster.lua", "AdvancedSpellCaster.otui", "Anty_push.lua",
   "AttackMonsterwithMoreHp.lua", "Attack_All.lua", "Attack_Back.lua", "AutoEnergy.lua",
@@ -225,10 +183,11 @@ local targetbotFiles = {
   "creature.lua", "creature_attack.lua", "creature_editor.lua", "creature_editor.otui",
   "creature_priority.lua", "looting.lua", "looting.otui", "target.lua", "target.otui", "walking.lua"
 }
--- Buttons (same as before)
+
+-- Buttons
 UI.Button("Update All", function()
     if updateInProgress then
-        warn("Update in progress")
+        warn("Update in progress!")
         return
     end
     
@@ -239,6 +198,26 @@ UI.Button("Update All", function()
         {list = targetbotFiles, url = "https://raw.githubusercontent.com/GresQu/BotGresqu/main/targetbot/", folder = targetbotFolder}
     })
 end)
+
+-- Profile fix button
+local function removeProfileFiles()
+    local removedCount = 0
+    local profileFiles = {"profile_1.json", "profile_2.json", "profile_3.json", "profile_4.json", "profile_5.json"}
+    
+    for _, filename in ipairs(profileFiles) do
+        local profilePath = storageFolder .. "/" .. filename
+        if g_resources.fileExists(profilePath) then
+            local success = g_resources.deleteFile(profilePath)
+            if success then
+                removedCount = removedCount + 1
+                warn("Removed: " .. filename)
+            end
+        end
+    end
+    
+    return removedCount
+end
+
 UI.Button("Fix After Update", function()
     if updateInProgress then
         warn("Wait for update")
