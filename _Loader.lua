@@ -23,7 +23,7 @@ local scriptManager = {
 local sep = UI.Separator()
 sep:setHeight(4)
 sep:setBackgroundColor('#A0B0C0')
-authorLabel = UI.Label("- Made By GresQu -")
+authorLabel = UI.Label("- Made By GresQu - v1.0")
 authorLabel:setColor("yellow")
 local sep1 = UI.Separator()
 sep1:setHeight(4)
