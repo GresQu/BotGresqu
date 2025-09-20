@@ -1,7 +1,7 @@
 local lastManaShield = 0
 
 macro(100, "mana shield", function() 
-  if hasManaShield() or lastManaShield + 20000 > now then 
+  if hasManaShield() or lastManaShield + 1000 > now then 
     return 
   end
   
