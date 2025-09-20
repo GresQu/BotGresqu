@@ -84,7 +84,7 @@ local function saveFile(path, content)
     
     if g_resources.fileExists(path) then
         local existingContent = g_resources.readFileContents(path)
-        if normalizeContent(existingContent) == normalizeContent(content) then
+        if existingContent == content then
             return false
         end
     end
