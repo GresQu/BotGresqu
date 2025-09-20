@@ -181,11 +181,11 @@ end
 local EffectAvoider = {
     config = {
         enabled = false,
-        effect_ids = {1528, 1531},
+        effect_ids = {376},
         check_area = {x=6, y=6},
         maintain_distance_enabled = true,
-        min_distance = 2,
-        max_distance = 4,
+        min_distance = 0,
+        max_distance = 0,
         pathfinding_search_radius = 7
     },
     effects_detected = false,
