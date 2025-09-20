@@ -42,7 +42,7 @@ local function checkPos(x, y)
  end
 end
 
-macro(1, 'Bug Map', "shift+1", function() 
+macro(1, 'Bug Map', "ctrl+1", function() 
  if modules.game_console and modules.game_console:isChatEnabled() then return end
 
  if modules.corelib.g_keyboard.isKeyPressed('w') then
