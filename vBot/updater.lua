@@ -215,6 +215,6 @@ UI.Button("Fix After Update", function()
     if removedCount > 0 then
         warn("Profiles fixed. Restart bot.")
     else
-        warn("No profiles to fix."
+        warn("No profiles to fix.")
     end
 end)
