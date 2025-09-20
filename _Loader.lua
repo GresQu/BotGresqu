@@ -55,6 +55,7 @@ scriptManager.availableScripts = {
     {name = "Sense_last_target", id = "Sense_last_target", file = "Sense_last_target"},
     {name = "Auto Follow Name", id = "Auto Follow", file = "AutoFollowName"},
     {name = "auto_follow_attacker", id = "auto_follow_attacker", file = "auto_follow_attacker"},
+    {name = "mana shield", id = "mana_shield", file = "mana_shield"},
     {name = "Hold_Target", id = "Hold_Target", file = "hold_target"},
 	{name = "Bug_map", id = "Bug_map", file = "Bug_map"},
     {name = "TurnToTarget", id = "TurnToTarget", file = "TurnToTarget"},
