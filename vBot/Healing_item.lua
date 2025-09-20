@@ -75,16 +75,35 @@ local function findChildById(widget, id)
 end
 
 local healingmacro1 = macro(300, function()
+    --print("[DEBUG] Running healingmacro1")
     local cfg = getActiveConfig()
-    if not cfg or not cfg.hp1enabled then return end
-    if now - lastUseHp1 < getCooldown() then return end
+    if not cfg or not cfg.hp1enabled then 
+        --print("[DEBUG] HP1 macro disabled") 
+        return 
+    end
+    if now - lastUseHp1 < getCooldown() then 
+        --print("[DEBUG] HP1 cooldown not ready") 
+        return 
+    end
     local hp = player:getHealthPercent()
+    --print(string.format("[DEBUG] HP: %d, Range: %d - %d", hp, cfg.minHp1, cfg.maxHp1))
     if hp >= cfg.minHp1 and hp <= cfg.maxHp1 and cfg.hpItem1 ~= 0 then
+        --print("[DEBUG] Using HP item", cfg.hpItem1)
         useItemDependingOnType(cfg.hpItem1)
         lastUseHp1 = now
     end
 end)
+
 local healingmacro2 = macro(300, function()
+    --print("[DEBUG] Running healingmacro2")
+    local cfg = getActiveConfig()
+    if not cfg or not cfg.hp2enabled then --print("[DEBUG] HP2 macro disabled") return end
+    if now - lastUseHp2 < getCooldown() then --print("[DEBUG] HP2 cooldown not ready") return end
+    local hp = player:getHealthPercent()
+    --print(string.format("[DEBUG] HP: %d, Range: %d - %d", hp, cfg.minHp2, cfg.maxHp2))
+    if hp >= cfg.minHp2 and hp <= cfg.maxHp2 and cfg.hpItem2 ~= 0 then
+        --print("[DEBUG] Using HP item", cfg.hpItem2)
+	end
     local cfg = getActiveConfig()
     if not cfg or not cfg.hp2enabled then return end
     if now - lastUseHp2 < getCooldown() then return end
@@ -95,6 +114,15 @@ local healingmacro2 = macro(300, function()
     end
 end)
 local healingmacro3 = macro(300, function()
+    --print("[DEBUG] Running healingmacro3")
+    local cfg = getActiveConfig()
+    if not cfg or not cfg.hp3enabled then --print("[DEBUG] HP3 macro disabled") return end
+    if now - lastUseHp3 < getCooldown() then --print("[DEBUG] HP3 cooldown not ready") return end
+    local hp = player:getHealthPercent()
+    --print(string.format("[DEBUG] HP: %d, Range: %d - %d", hp, cfg.minHp3, cfg.maxHp3))
+    if hp >= cfg.minHp3 and hp <= cfg.maxHp3 and cfg.hpItem3 ~= 0 then
+        --print("[DEBUG] Using HP item", cfg.hpItem3)
+	end
     local cfg = getActiveConfig()
     if not cfg or not cfg.hp3enabled then return end
     if now - lastUseHp3 < getCooldown() then return end
@@ -105,6 +133,15 @@ local healingmacro3 = macro(300, function()
     end
 end)
 local manamacro1 = macro(300, function()
+    --print("[DEBUG] Running manamacro1")
+    local cfg = getActiveConfig()
+    if not cfg or not cfg.mana1enabled then --print("[DEBUG] Mana1 macro disabled") return end
+    if now - lastUseMp1 < getCooldown() then --print("[DEBUG] Mana1 cooldown not ready") return end
+    local mp = math.min(100, math.floor(100 * (player:getMana() / player:getMaxMana())))
+    --print(string.format("[DEBUG] MP: %d, Range: %d - %d", mp, cfg.minMana1, cfg.maxMana1))
+    if mp >= cfg.minMana1 and mp <= cfg.maxMana1 and cfg.manaItem1 ~= 0 then
+        --print("[DEBUG] Using Mana item", cfg.manaItem1)
+	end
     local cfg = getActiveConfig()
     if not cfg or not cfg.mana1enabled then return end
     if now - lastUseMp1 < getCooldown() then return end
@@ -115,6 +152,15 @@ local manamacro1 = macro(300, function()
     end
 end)
 local manamacro2 = macro(300, function()
+    --print("[DEBUG] Running manamacro2")
+    local cfg = getActiveConfig()
+    if not cfg or not cfg.mana2enabled then --print("[DEBUG] Mana2 macro disabled") return end
+    if now - lastUseMp2 < getCooldown() then --print("[DEBUG] Mana2 cooldown not ready") return end
+    local mp = math.min(100, math.floor(100 * (player:getMana() / player:getMaxMana())))
+    --print(string.format("[DEBUG] MP: %d, Range: %d - %d", mp, cfg.minMana2, cfg.maxMana2))
+    if mp >= cfg.minMana2 and mp <= cfg.maxMana2 and cfg.manaItem2 ~= 0 then
+        --print("[DEBUG] Using Mana item", cfg.manaItem2)
+	end
     local cfg = getActiveConfig()
     if not cfg or not cfg.mana2enabled then return end
     if now - lastUseMp2 < getCooldown() then return end
@@ -125,6 +171,15 @@ local manamacro2 = macro(300, function()
     end
 end)
 local manamacro3 = macro(300, function()
+    --print("[DEBUG] Running manamacro3")
+    local cfg = getActiveConfig()
+    if not cfg or not cfg.mana3enabled then --print("[DEBUG] Mana3 macro disabled") return end
+    if now - lastUseMp3 < getCooldown() then --print("[DEBUG] Mana3 cooldown not ready") return end
+    local mp = math.min(100, math.floor(100 * (player:getMana() / player:getMaxMana())))
+    --print(string.format("[DEBUG] MP: %d, Range: %d - %d", mp, cfg.minMana3, cfg.maxMana3))
+    if mp >= cfg.minMana3 and mp <= cfg.maxMana3 and cfg.manaItem3 ~= 0 then
+        --print("[DEBUG] Using Mana item", cfg.manaItem3)
+	end
     local cfg = getActiveConfig()
     if not cfg or not cfg.mana3enabled then return end
     if now - lastUseMp3 < getCooldown() then return end
@@ -199,11 +254,17 @@ local function setupSwitch(switchId, configKey, minScrollId, maxScrollId, type, 
 end
 
 local function initializeControls()
-    for i = 1, 3 do
-        setupSwitch('enableHp' .. i, 'hp' .. i .. 'enabled', 'minHp' .. i .. 'Scroll', 'maxHp' .. i .. 'Scroll', 'HP', 'hpItem' .. i, _G and _G['healingmacro' .. i] or healingmacro1) -- fallbacks 
-        setupSwitch('enableMana' .. i, 'mana' .. i .. 'enabled', 'minMana' .. i .. 'Scroll', 'maxMana' .. i .. 'Scroll', 'MP', 'manaItem' .. i, _G and _G['manamacro' .. i] or manamacro1)
-    end
+    -- HP slots
+    setupSwitch('enableHp1', 'hp1enabled', 'minHp1Scroll', 'maxHp1Scroll', 'HP', 'hpItem1', healingmacro1)
+    setupSwitch('enableHp2', 'hp2enabled', 'minHp2Scroll', 'maxHp2Scroll', 'HP', 'hpItem2', healingmacro2)
+    setupSwitch('enableHp3', 'hp3enabled', 'minHp3Scroll', 'maxHp3Scroll', 'HP', 'hpItem3', healingmacro3)
+
+    -- Mana slots
+    setupSwitch('enableMana1', 'mana1enabled', 'minMana1Scroll', 'maxMana1Scroll', 'MP', 'manaItem1', manamacro1)
+    setupSwitch('enableMana2', 'mana2enabled', 'minMana2Scroll', 'maxMana2Scroll', 'MP', 'manaItem2', manamacro2)
+    setupSwitch('enableMana3', 'mana3enabled', 'minMana3Scroll', 'maxMana3Scroll', 'MP', 'manaItem3', manamacro3)
 end
+
 
 local function updateControls()
     if not itemHealingWindow then return end
@@ -237,6 +298,7 @@ local function switchMode(newMode)
     storage[panelName].currentMode = newMode
 
     if itemHealingWindow and itemHealingWindow:isVisible() then
+    updateControls()
         for i = 1, 3 do
             local hpItem = findChildById(itemHealingWindow, 'hpItem' .. i)
             local manaItem = findChildById(itemHealingWindow, 'manaItem' .. i)
@@ -305,6 +367,7 @@ if rootWidget then
     itemHealingWindow = UI.createWindow('ItemHealingWindow', rootWidget)
     itemHealingWindow:hide()
     itemHealingWindow.onVisibilityChange = function(widget, visible)
+    if visible then updateControls() end
         if visible then
             initializeControls()
         end
