@@ -1,5 +1,3 @@
-
-
 local lastManaShield = 0
 
 macro(100, "mana shield", function() 
