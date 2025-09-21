@@ -1,30 +1,32 @@
-local sep = UI.Separator()
-sep:setHeight(4)
-sep:setBackgroundColor('#A0B0C0')
+setDefaultTab("Tools")
 
--- Konfiguracja domyślna
-if not storage.useItemID then
-  storage.useItemID = "24118"
-end
-if not storage.corpseIDs then
-  storage.corpseIDs = "4181"
-end
+-- Domyślne wartości
+if not storage.useItemID then storage.useItemID = "24118" end
+if not storage.corpseIDs then storage.corpseIDs = "4181" end
+if not storage.corpseCheckRange then storage.corpseCheckRange = 1 end
 
-local COOLDOWN_MS = 500 -- jak często sprawdzać w ms
+local COOLDOWN_MS = 500
 
--- UI: pole do wpisania ID przedmiotu do użycia (np. obsidian knife)
+-- UI: ID itemka
 UI.TextEdit(storage.useItemID, function(widget, text)
   widget:setTooltip("ID itemka do użycia na zwłokach\nnp: 24118")
   storage.useItemID = text
 end)
 
--- UI: pole do wpisania ID zwłok (po przecinku)
+-- UI: ID zwłok
 UI.TextEdit(storage.corpseIDs, function(widget, text)
   widget:setTooltip("ID zwłok, oddzielone przecinkami\nnp: 4181,3058,3060")
   storage.corpseIDs = text
 end)
 
--- Parser tekstu: "4181,3058" → {4181, 3058}
+-- UI: Zasięg (CheckPOS)
+UI.TextEdit(storage.corpseCheckRange, function(widget, text)
+  widget:setTooltip("Zasięg sprawdzania zwłok (w polach SQM wokół postaci)\nnp: 1 = 3x3, 2 = 5x5")
+  local value = tonumber(text)
+  if value then storage.corpseCheckRange = value end
+end)
+
+-- Parser tekstu
 local function parseIDs(text)
   local list = {}
   for id in string.gmatch(text, "[0-9]+") do
@@ -33,40 +35,40 @@ local function parseIDs(text)
   return list
 end
 
--- Pozycje do sprawdzania (1 sqm)
-local RELATIVE_POSITIONS = {
-    { x =  0, y =  0},
-    { x = -1, y =  0},
-    { x =  1, y =  0},
-    { x =  0, y = -1},
-    { x =  0, y =  1}
-}
-
 -- Główne makro
-macro(COOLDOWN_MS, "Use on Corpse [UI]", function()
-  local playerPos = player:getPosition()
-  if not playerPos then return end
+macro(COOLDOWN_MS, "Use on Corpses [dynamic range]", function()
+  local pos = player:getPosition()
+  if not pos then return end
 
   local useItemID = tonumber(storage.useItemID)
   local corpseIDs = parseIDs(storage.corpseIDs)
-  if not useItemID or #corpseIDs == 0 then return end
+  local checkRange = tonumber(storage.corpseCheckRange) or 1
 
-  local tool = findItem(useItemID)
-  if not tool then return end
+  if not useItemID or #corpseIDs == 0 then
+    print("[CorpseMacro] Błędne ID itemka lub zwłok")
+    return
+  end
 
-  for _, offset in ipairs(RELATIVE_POSITIONS) do
-    local checkPos = {
-      x = playerPos.x + offset.x,
-      y = playerPos.y + offset.y,
-      z = playerPos.z
-    }
-    local tile = g_map.getTile(checkPos)
-    if tile then
-      local items = tile:getItems() or {}
-      for _, item in ipairs(items) do
-        if table.find(corpseIDs, item:getId()) then
-          useWith(tool, item)
-          return -- użyto na jednej zwłoce
+  -- Przeszukaj wszystkie pola w zakresie -checkRange do +checkRange
+  for dx = -checkRange, checkRange do
+    for dy = -checkRange, checkRange do
+      if dx ~= 0 or dy ~= 0 then -- pomiń pole postaci
+        local checkPos = {
+          x = pos.x + dx,
+          y = pos.y + dy,
+          z = pos.z
+        }
+
+        local tile = g_map.getTile(checkPos)
+        if tile then
+          local items = tile:getItems() or {}
+          for _, item in ipairs(items) do
+            if table.find(corpseIDs, item:getId()) then
+              print(string.format("[CorpseMacro] Skórowanie ID %d @ (%d,%d)", item:getId(), checkPos.x, checkPos.y))
+              useOnGroundItem(useItemID, checkPos)
+              return -- tylko jedno użycie na cykl
+            end
+          end
         end
       end
     end
