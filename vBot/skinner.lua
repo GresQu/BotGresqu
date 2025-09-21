@@ -1,10 +1,10 @@
-
 -- Ustawienia domyślne
 if not storage.useItemID then storage.useItemID = "24118" end
 if not storage.corpseIDs then storage.corpseIDs = "4181" end
 if not storage.corpseCheckRange then storage.corpseCheckRange = 1 end
 
 local COOLDOWN_MS = 500
+local lastUseTime = 0
 
 -- UI: ID itemku (narzędzia np. nóż)
 UI.TextEdit(storage.useItemID, function(widget, text)
@@ -34,17 +34,30 @@ local function parseIDs(text)
   return list
 end
 
+-- Pomocnicza funkcja do znalezienia itemu w plecaku jako obiekt Item
+local function findItemInContainers(id)
+  for _, container in pairs(getContainers()) do
+    for __, item in ipairs(container:getItems()) do
+      if item:getId() == id then
+        return item
+      end
+    end
+  end
+  return nil
+end
+
 -- Główne makro
 macro(COOLDOWN_MS, "Corpse Skinner", function()
   local pos = player:getPosition()
   if not pos then return end
 
+  if now < (lastUseTime + COOLDOWN_MS) then return end
+
   local useItemID = tonumber(storage.useItemID)
   local corpseIDs = parseIDs(storage.corpseIDs)
   local checkRange = tonumber(storage.corpseCheckRange) or 1
 
-  -- Znajdź narzędzie w plecaku
-  local toolItem = findItem(useItemID)
+  local toolItem = findItemInContainers(useItemID)
   if not toolItem then return end
 
   for dx = -checkRange, checkRange do
@@ -55,8 +68,8 @@ macro(COOLDOWN_MS, "Corpse Skinner", function()
         local items = tile:getItems() or {}
         for _, item in ipairs(items) do
           if table.find(corpseIDs, item:getId()) then
-            -- ✅ Użycie itemka (tool) bezpośrednio na corpse
             useWith(toolItem, item)
+            lastUseTime = now
             return
           end
         end
