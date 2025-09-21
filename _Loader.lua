@@ -64,6 +64,7 @@ scriptManager.availableScripts = {
     {name = "Anty_push", id = "Anty_push", file = "Anty_push"},
     {name = "pick_up", id = "pick_up", file = "pick_up"},
     {name = "exchange_money", id = "exchange_money", file = "exchange_money"},
+    {name = "Skinner", id = "Skinner", file = "skinner"},
     {name = "Healing Spell", id = "healing_setup", file = "healing_setup"},
     {name = "Wodbo_Healing", id = "Wodbo_Healing", file = "Wodbo_Healing", status = "disable"},
     {name = "Healing Items", id = "Healing_item", file = "Healing_item"},
