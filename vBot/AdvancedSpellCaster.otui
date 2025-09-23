@@ -13,7 +13,7 @@ SpellEntryWidget < UIWidget
     font: verdana-11px-rounded
   BotSwitch
     id: pveSwitch
-    text: PvE
+    text: Target
     anchors.left: spellNameLabel.right
     anchors.verticalCenter: parent.verticalCenter
     margin-left: 10
