@@ -1,239 +1,175 @@
-HealSetupWindow < MainWindow
-  id: healSetupWindow
-  size: 360 200
-  visible: false
-  draggable: true
-  text: Healing Setup
-  @onEscape: self:hide()
+-- Script Name: healing_setup.lua
+-- Author: GresQu
+-- Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-04-27 19:34:21
+-- Current User's Login: GresQu
+
+setDefaultTab("HP")
+
+local sep = UI.Separator()
+sep:setHeight(4)
+sep:setBackgroundColor('#A0B0C0')
+local windowName = "HealSetupWindow"
+local healWindow = UI.createWindow(windowName)
+healWindow:hide()
+
+-- Inicjalizacja storage dla stanu checkboxów jeśli nie istnieje
+storage.healSpellsEnabled = storage.healSpellsEnabled or {
+    spell1 = false,
+    spell2 = false,
+    spell3 = false,
+    spell4 = false
+}
+
+-- Dodajemy zmienne do śledzenia stanu makr
+healWindow.healSpellsEnabled = {
+    spell1 = storage.healSpellsEnabled.spell1 or false,
+    spell2 = storage.healSpellsEnabled.spell2 or false,
+    spell3 = storage.healSpellsEnabled.spell3 or false,
+    spell4 = storage.healSpellsEnabled.spell4 or false
+}
+
+local ui = setupUI([[
+Panel
+  height: 19
 
   Button
-    id: closeWindowButton
-    !text: tr('X')
-    font: verdana-11px-rounded
+    id: open
     anchors.top: parent.top
-    anchors.right: parent.right
-    margin-top: -8
-    margin-right: 3
-    size: 18 18
-    color: #FF6347
-    @onClick: self:getParent():hide()
+    anchors.left: parent.left
+    width: 175
+    height: 20
+    text: Healing Spell Setup
+    color: yellow
+]])
+ui:setId("healSetupOpener")
+ui.open.onClick = function()
+  healWindow:show()
+  healWindow:raise()
+  healWindow:focus()
+end
 
-  Panel
-    id: container
-    anchors.fill: parent
-    padding: 10
+-- Referencje
+local c = healWindow.container
+local spell1, spell1Proc, cooldown1 = c.spell1, c.spell1Proc, c.cooldown1
+local spell2, spell2Proc, cooldown2 = c.spell2, c.spell2Proc, c.cooldown2
+local spell3, spell3Proc, cooldown3 = c.spell3, c.spell3Proc, c.cooldown3
+local spell4, spell4Proc, cooldown4 = c.spell4, c.spell4Proc, c.cooldown4
 
-    Label
-      id: headerSpellName
-      text: Spell Name
-      font: verdana-11px-rounded
-      anchors.top: parent.top
-      anchors.left: parent.left
-      width: 100
-      text-align: center
+-- Zapis/odczyt
+spell1.onTextChange     = function(w,t) storage.spell1     = t end
+spell1Proc.onTextChange = function(w,t) storage.spell1Proc = t end
+cooldown1.onTextChange  = function(w,t) storage.cooldown1  = t end
+spell2.onTextChange     = function(w,t) storage.spell2     = t end
+spell2Proc.onTextChange = function(w,t) storage.spell2Proc = t end
+cooldown2.onTextChange  = function(w,t) storage.cooldown2  = t end
+spell3.onTextChange     = function(w,t) storage.spell3     = t end
+spell3Proc.onTextChange = function(w,t) storage.spell3Proc = t end
+cooldown3.onTextChange  = function(w,t) storage.cooldown3  = t end
+spell4.onTextChange     = function(w,t) storage.spell4     = t end
+spell4Proc.onTextChange = function(w,t) storage.spell4Proc = t end
+cooldown4.onTextChange  = function(w,t) storage.cooldown4  = t end
 
-    Label
-      id: headerHealthPerc
-      text: Health %
-      font: verdana-11px-rounded
-      anchors.top: parent.top
-      anchors.left: headerSpellName.right
-      margin-left: 5
-      width: 50
-      text-align: center
+spell1:setText    (storage.spell1     or "")
+spell1Proc:setText(storage.spell1Proc or "90")
+cooldown1:setText (storage.cooldown1  or "100")
+spell2:setText    (storage.spell2     or "")
+spell2Proc:setText(storage.spell2Proc or "90")
+cooldown2:setText (storage.cooldown2  or "100")
+spell3:setText    (storage.spell3     or "")
+spell3Proc:setText(storage.spell3Proc or "90")
+cooldown3:setText (storage.cooldown3  or "100")
+spell4:setText    (storage.spell4     or "")
+spell4Proc:setText(storage.spell4Proc or "90")
+cooldown4:setText (storage.cooldown4  or "100")
 
-    Label
-      id: headerEnable
-      text: Enable
-      font: verdana-11px-rounded
-      anchors.top: parent.top
-      anchors.left: headerHealthPerc.right
-      margin-left: 15
-      width: 50
-      text-align: center
+-- Ustawienie początkowego stanu checkboxów i dodanie obsługi zdarzeń
+if c.enableSpell1 then 
+    c.enableSpell1:setChecked(storage.healSpellsEnabled.spell1)
+    c.enableSpell1.onCheckChange = function(widget, checked)
+        healWindow.healSpellsEnabled.spell1 = checked
+        storage.healSpellsEnabled.spell1 = checked
+    end
+end
 
-    Label
-      id: headerCooldown
-      text: Cooldown (ms)
-      font: verdana-11px-rounded
-      anchors.top: parent.top
-      anchors.left: headerEnable.right
-      margin-left: 15
-      width: 90
-      text-align: center
+if c.enableSpell2 then 
+    c.enableSpell2:setChecked(storage.healSpellsEnabled.spell2)
+    c.enableSpell2.onCheckChange = function(widget, checked)
+        healWindow.healSpellsEnabled.spell2 = checked
+        storage.healSpellsEnabled.spell2 = checked
+    end
+end
 
-    Label
-      id: spell1Label
-      text: Spell 1:
-      font: verdana-11px-rounded
-      anchors.top: headerSpellName.bottom
-      anchors.left: parent.left
-      margin-top: 10
-      width: 60
+if c.enableSpell3 then 
+    c.enableSpell3:setChecked(storage.healSpellsEnabled.spell3)
+    c.enableSpell3.onCheckChange = function(widget, checked)
+        healWindow.healSpellsEnabled.spell3 = checked
+        storage.healSpellsEnabled.spell3 = checked
+    end
+end
 
-    BotTextEdit
-      id: spell1
-      anchors.top: spell1Label.top
-      anchors.left: headerSpellName.left
-      width: 100
-      height: 20
+if c.enableSpell4 then 
+    c.enableSpell4:setChecked(storage.healSpellsEnabled.spell4)
+    c.enableSpell4.onCheckChange = function(widget, checked)
+        healWindow.healSpellsEnabled.spell4 = checked
+        storage.healSpellsEnabled.spell4 = checked
+    end
+end
 
-    BotTextEdit
-      id: spell1Proc
-      anchors.top: spell1Label.top
-      anchors.left: spell1.right
-      margin-left: 5
-      width: 50
-      height: 20
+-- Zmienne do śledzenia czasu ostatniego użycia spelli
+local lastUseTime = {
+    spell1 = 0,
+    spell2 = 0,
+    spell3 = 0,
+    spell4 = 0
+}
 
-    CheckBox
-      id: enableSpell1
-      text: ""
-      anchors.top: spell1Label.top
-      anchors.left: spell1Proc.right
-      margin-left: 30
-      width: 20
-      height: 20
-      @onCheckChange: |
-        local root = self:getParent():getParent()
-        root.healSpellsEnabled.spell1 = self:isChecked()
+-- ====================================================================
+-- # Makra: rejestracja i automatyczne wywołanie
+-- ====================================================================
+macro(10, "", function()
+    if healWindow.healSpellsEnabled.spell1 then
+        local proc = tonumber(storage.spell1Proc) or 0
+        local cooldown = tonumber(storage.cooldown1) or 100
+        local currentTime = now
+        if hppercent() <= proc and storage.spell1 ~= "" and (currentTime - lastUseTime.spell1) >= cooldown then
+            say(storage.spell1)
+            lastUseTime.spell1 = currentTime
+        end
+    end
+end)
 
-    BotTextEdit
-      id: cooldown1
-      anchors.top: spell1Label.top
-      anchors.left: enableSpell1.right
-      margin-left: 30
-      width: 50
-      height: 20
+macro(10, "", function()
+    if healWindow.healSpellsEnabled.spell2 then
+        local proc = tonumber(storage.spell2Proc) or 0
+        local cooldown = tonumber(storage.cooldown2) or 100
+        local currentTime = now
+        if hppercent() <= proc and storage.spell2 ~= "" and (currentTime - lastUseTime.spell2) >= cooldown then
+            say(storage.spell2)
+            lastUseTime.spell2 = currentTime
+        end
+    end
+end)
 
-    Label
-      id: spell2Label
-      text: Spell 2:
-      font: verdana-11px-rounded
-      anchors.top: spell1.bottom
-      anchors.left: parent.left
-      margin-top: 10
-      width: 60
+macro(10, "", function()
+    if healWindow.healSpellsEnabled.spell3 then
+        local proc = tonumber(storage.spell3Proc) or 0
+        local cooldown = tonumber(storage.cooldown3) or 100
+        local currentTime = now
+        if hppercent() <= proc and storage.spell3 ~= "" and (currentTime - lastUseTime.spell3) >= cooldown then
+            say(storage.spell3)
+            lastUseTime.spell3 = currentTime
+        end
+    end
+end)
 
-    BotTextEdit
-      id: spell2
-      anchors.top: spell2Label.top
-      anchors.left: headerSpellName.left
-      width: 100
-      height: 20
-
-    BotTextEdit
-      id: spell2Proc
-      anchors.top: spell2Label.top
-      anchors.left: spell2.right
-      margin-left: 5
-      width: 50
-      height: 20
-
-    CheckBox
-      id: enableSpell2
-      text: ""
-      anchors.top: spell2Label.top
-      anchors.left: spell2Proc.right
-      margin-left: 30
-      width: 20
-      height: 20
-      @onCheckChange: |
-        local root = self:getParent():getParent()
-        root.healSpellsEnabled.spell2 = self:isChecked()
-
-    BotTextEdit
-      id: cooldown2
-      anchors.top: spell2Label.top
-      anchors.left: enableSpell2.right
-      margin-left: 30
-      width: 50
-      height: 20
-
-    Label
-      id: spell3Label
-      text: Spell 3:
-      font: verdana-11px-rounded
-      anchors.top: spell2.bottom
-      anchors.left: parent.left
-      margin-top: 10
-      width: 60
-
-    BotTextEdit
-      id: spell3
-      anchors.top: spell3Label.top
-      anchors.left: headerSpellName.left
-      width: 100
-      height: 20
-
-    BotTextEdit
-      id: spell3Proc
-      anchors.top: spell3Label.top
-      anchors.left: spell3.right
-      margin-left: 5
-      width: 50
-      height: 20
-
-    CheckBox
-      id: enableSpell3
-      text: ""
-      anchors.top: spell3Label.top
-      anchors.left: spell3Proc.right
-      margin-left: 30
-      width: 20
-      height: 20
-      @onCheckChange: |
-        local root = self:getParent():getParent()
-        root.healSpellsEnabled.spell3 = self:isChecked()
-
-    BotTextEdit
-      id: cooldown3
-      anchors.top: spell3Label.top
-      anchors.left: enableSpell3.right
-      margin-left: 30
-      width: 50
-      height: 20
-
-    Label
-      id: spell4Label
-      text: Spell 4:
-      font: verdana-11px-rounded
-      anchors.top: spell3.bottom
-      anchors.left: parent.left
-      margin-top: 10
-      width: 60
-
-    BotTextEdit
-      id: spell4
-      anchors.top: spell4Label.top
-      anchors.left: headerSpellName.left
-      width: 100
-      height: 20
-
-    BotTextEdit
-      id: spell4Proc
-      anchors.top: spell4Label.top
-      anchors.left: spell4.right
-      margin-left: 5
-      width: 50
-      height: 20
-
-    CheckBox
-      id: enableSpell4
-      text: ""
-      anchors.top: spell4Label.top
-      anchors.left: spell4Proc.right
-      margin-left: 30
-      width: 20
-      height: 20
-      @onCheckChange: |
-        local root = self:getParent():getParent()
-        root.healSpellsEnabled.spell4 = self:isChecked()
-
-    BotTextEdit
-      id: cooldown4
-      anchors.top: spell4Label.top
-      anchors.left: enableSpell4.right
-      margin-left: 30
-      width: 50
-      height: 20
+macro(10, "", function()
+    if healWindow.healSpellsEnabled.spell4 then
+        local proc = tonumber(storage.spell4Proc) or 0
+        local cooldown = tonumber(storage.cooldown4) or 100
+        local currentTime = now
+        if hppercent() <= proc and storage.spell4 ~= "" and (currentTime - lastUseTime.spell4) >= cooldown then
+            say(storage.spell4)
+            lastUseTime.spell4 = currentTime
+        end
+    end
+end)
