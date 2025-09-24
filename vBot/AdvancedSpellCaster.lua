@@ -1,10 +1,11 @@
 local sep = UI.Separator()
 sep:setHeight(4)
 sep:setBackgroundColor('#A0B0C0')
+
 -- vBot/AdvancedSpellCaster.lua
 local mod = {
     name = "AdvancedSpellCaster",
-    version = "1.3.2", -- Updated version
+    version = "1.3.3", -- Updated version with mode gate and priority fix
     author = "GresQu"
 }
 
@@ -19,26 +20,76 @@ local aoeRangeInput = nil
 local toggleMacroButton = nil
 local moveSpellUpButton = nil
 local moveSpellDownButton = nil
+local closeWindowButton = nil
 local controlPanel = nil
 local spellCasterMacro = nil
 local onScreenIcon = nil
+local mainPanel = nil
 
 local selectedSpellIndex = nil
 local macroCooldownUntil = 0
+
+-- Tryby i stan przełączania
+local MODE_COMBO = "combo"
+local MODE_NONCOMBO = "noncombo"
+local lastCastMode = nil
+local lastCastAt = 0
+local lastCastDelayMs = 0
 
 -- Storage initialization
 storage.advancedSpells = storage.advancedSpells or {}
 storage.advancedSpells.spellList = storage.advancedSpells.spellList or {}
 
--- Helper function to calculate distance
+-- Helper: dystans
 local function calculateDistanceBetween(pos1, pos2)
-    if not pos1 or not pos2 or type(pos1.x) ~= "number" or type(pos1.y) ~= "number" or type(pos1.z) ~= "number" or type(pos2.x) ~= "number" or type(pos2.y) ~= "number" or type(pos2.z) ~= "number" then
+    if not pos1 or not pos2
+        or type(pos1.x) ~= "number" or type(pos1.y) ~= "number" or type(pos1.z) ~= "number"
+        or type(pos2.x) ~= "number" or type(pos2.y) ~= "number" or type(pos2.z) ~= "number" then
         return math.huge
     end
     local dx = pos1.x - pos2.x
     local dy = pos1.y - pos2.y
     local dz = pos1.z - pos2.z
     return math.sqrt(dx*dx + dy*dy + dz*dz)
+end
+
+-- Tryb spella
+local function getSpellMode(spell)
+    return spell.allowCombo and MODE_COMBO or MODE_NONCOMBO
+end
+
+-- Bramka przełączania trybu: czeka do lastCastAt + lastCastDelayMs
+local function canCastMode(targetMode, tnow)
+    if lastCastMode and lastCastMode ~= targetMode then
+        local gate = tonumber(lastCastDelayMs) or 0
+        if tnow < (lastCastAt + gate) then
+            return false
+        end
+    end
+    return true
+end
+
+-- Rezerwacja tiku dla kategorii, jeśli kandydaci są gotowi CD,
+-- ale jedyną przeszkodą jest bramka trybu (zwraca czas zwolnienia lub nil)
+local function categoryModeBlockedUntil(spellFilter, tnow, currentTarget)
+    local blocked = false
+    for _, s in ipairs(storage.advancedSpells.spellList) do
+        if spellFilter(s)
+            and tnow >= (s.lastCast or 0) + (s.delay or 0)
+            and not (s.onTargetOnly and not currentTarget) then
+            local mode = getSpellMode(s)
+            if not canCastMode(mode, tnow) then
+                blocked = true
+            else
+                -- Da się rzucić teraz w tej kategorii
+                return nil
+            end
+        end
+    end
+    if blocked then
+        return (lastCastAt + (tonumber(lastCastDelayMs) or 0))
+    end
+    return nil
 end
 
 function mod:addSpell()
@@ -62,20 +113,19 @@ function mod:addSpell()
 
     spellNameInput:setText("")
     spellDelayInput:setText("")
-    self:renderSpellList()
+    mod:renderSpellList()
 end
 
 function mod:renderSpellList()
     if not spellListPanel or not window then return end
     spellListPanel:destroyChildren()
-
     if #storage.advancedSpells.spellList == 0 then return end
 
     for i, spellData in ipairs(storage.advancedSpells.spellList) do
         local spellEntryWidget = UI.createWidget("SpellEntryWidget", spellListPanel)
         if not spellEntryWidget then goto continue_loop end
 
-        spellEntryWidget.onClick = function(widget)
+        spellEntryWidget.onClick = function()
             selectedSpellIndex = i
             mod:renderSpellList()
         end
@@ -99,30 +149,33 @@ function mod:renderSpellList()
 
         if pveSwitch then
             pveSwitch:setOn(spellData.pve)
-            pveSwitch.onClick = function(widget) spellData.pve = not spellData.pve; widget:setOn(spellData.pve) end
+            pveSwitch.onClick = function(w) spellData.pve = not spellData.pve; w:setOn(spellData.pve) end
         end
         if pvpSwitch then
             pvpSwitch:setOn(spellData.pvp)
-            pvpSwitch.onClick = function(widget) spellData.pvp = not spellData.pvp; widget:setOn(spellData.pvp) end
+            pvpSwitch.onClick = function(w) spellData.pvp = not spellData.pvp; w:setOn(spellData.pvp) end
         end
         if aoeSwitch then
             aoeSwitch:setOn(spellData.aoe)
-            aoeSwitch.onClick = function(widget) spellData.aoe = not spellData.aoe; widget:setOn(spellData.aoe) end
+            aoeSwitch.onClick = function(w) spellData.aoe = not spellData.aoe; w:setOn(spellData.aoe) end
         end
         if aoeSafeSwitch then
             aoeSafeSwitch:setOn(spellData.aoeSafe)
-            aoeSafeSwitch.onClick = function(widget) spellData.aoeSafe = not spellData.aoeSafe; widget:setOn(spellData.aoeSafe) end
+            aoeSafeSwitch.onClick = function(w) spellData.aoeSafe = not spellData.aoeSafe; w:setOn(spellData.aoeSafe) end
         end
         if onTargetSwitch then
             onTargetSwitch:setOn(spellData.onTargetOnly)
-            onTargetSwitch.onClick = function(widget) spellData.onTargetOnly = not spellData.onTargetOnly; widget:setOn(spellData.onTargetOnly) end
+            onTargetSwitch.onClick = function(w) spellData.onTargetOnly = not spellData.onTargetOnly; w:setOn(spellData.onTargetOnly) end
         end
         if comboSwitch then
             comboSwitch:setOn(spellData.allowCombo)
-            comboSwitch.onClick = function(widget) spellData.allowCombo = not spellData.allowCombo; widget:setOn(spellData.allowCombo) end
+            comboSwitch.onClick = function(w) spellData.allowCombo = not spellData.allowCombo; w:setOn(spellData.allowCombo) end
         end
         if removeButton then
-            removeButton.onClick = function() table.remove(storage.advancedSpells.spellList, i); mod:renderSpellList() end
+            removeButton.onClick = function()
+                table.remove(storage.advancedSpells.spellList, i)
+                mod:renderSpellList()
+            end
         end
 
         ::continue_loop::
@@ -163,9 +216,7 @@ function mod:executeSpellLogic()
     if not storage.advancedSpells.macroEnabled then return end
 
     local currentTime = now
-    if currentTime < macroCooldownUntil then
-        return
-    end
+    if currentTime < macroCooldownUntil then return end
 
     local playerPos = player:getPosition()
     if not playerPos then return end
@@ -177,95 +228,118 @@ function mod:executeSpellLogic()
         local comboHasStarted = false
         local spellCastedInThisTick = false
 
-        for i, spell in ipairs(storage.advancedSpells.spellList) do
-            if spellFilter(spell) and currentTime >= (spell.lastCast or 0) + spell.delay and not (spell.onTargetOnly and not currentTarget) then
+        for _, spell in ipairs(storage.advancedSpells.spellList) do
+            local thisMode = getSpellMode(spell)
+            -- bramka przełączania trybu (combo <-> noncombo)
+            if not canCastMode(thisMode, currentTime) then
+                goto continue_spell
+            end
+
+            if spellFilter(spell)
+                and currentTime >= (spell.lastCast or 0) + spell.delay
+                and not (spell.onTargetOnly and not currentTarget) then
+
                 if not comboHasStarted then
-                    -- This is the first valid spell we've found in this cycle.
+                    -- pierwszy ważny spell w tej kategorii
                     say(spell.name)
                     spell.lastCast = currentTime
                     spellCastedInThisTick = true
 
+                    -- aktualizacja stanu przełącznika trybu
+                    lastCastMode = thisMode
+                    lastCastAt = currentTime
+                    lastCastDelayMs = tonumber(spell.delay) or 0
+
                     if spell.allowCombo then
-                        -- The first spell allows combo, so we start the chain.
                         comboHasStarted = true
                     else
-                        -- The first spell does NOT allow combo. Set global CD and stop all processing.
-                        macroCooldownUntil = currentTime + spell.delay
-                        return true -- A spell was cast, and it breaks any potential chain.
+                        -- non‑combo: kończ kategorię po jednym rzucie
+                        return true
                     end
                 else
-                    -- A combo is already in progress from a previous spell.
+                    -- combo aktywne; dopuszczamy tylko kolejne allowCombo
                     if spell.allowCombo then
-                        -- This spell continues the combo. Cast it.
                         say(spell.name)
                         spell.lastCast = currentTime
-                    else
-                        -- This spell BREAKS the combo chain. Set global CD and stop all processing.
-                        macroCooldownUntil = currentTime + spell.delay
-                        return true -- A spell was cast, so we signal success and exit.
+                        -- aktualizacja ostatniego castu w trybie combo
+                        lastCastMode = thisMode -- nadal "combo"
+                        lastCastAt = currentTime
+                        -- ostatni delay combo determinuje bramkę do non‑combo
+                        lastCastDelayMs = tonumber(spell.delay) or lastCastDelayMs
                     end
                 end
             end
+
+            ::continue_spell::
         end
+
         return spellCastedInThisTick
     end
 
-    -- Priority #1: PvP
+    -- Priority #1: PvP (rezerwacja tiku jeśli blokuje tylko bramka trybu)
     if currentTarget and currentTarget:isPlayer() then
-        if processSpellCategory(function(spell) return spell.pvp end) then
-            return -- Stop processing other categories if a spell was cast
+        local pvpBlockedUntil = categoryModeBlockedUntil(function(s) return s.pvp end, currentTime, currentTarget)
+        if pvpBlockedUntil and pvpBlockedUntil > currentTime then
+            macroCooldownUntil = math.max(macroCooldownUntil, pvpBlockedUntil)
+            return
+        end
+        if processSpellCategory(function(s) return s.pvp end) then
+            return
         end
     end
 
-    -- Priority #2: AoE
+    -- Priority #2: AoE (rezerwacja tiku jeśli blokuje tylko bramka trybu)
     local minMonsters = tonumber(storage.advancedSpells.minMonstersAoe) or 3
     local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 5
-    local monsterCount = self:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
-    local playersNearby = #self:getPlayersInRange(7, playerPos, onScreenSpectators) > 0
+    local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
+    local playersNearby = #mod:getPlayersInRange(7, playerPos, onScreenSpectators) > 0
 
     if monsterCount >= minMonsters then
-        if processSpellCategory(function(spell) return spell.aoe and not (spell.aoeSafe and playersNearby) end) then
-            return -- Stop processing other categories if a spell was cast
+        local aoeFilter = function(s) return s.aoe and not (s.aoeSafe and playersNearby) end
+        local aoeBlockedUntil = categoryModeBlockedUntil(aoeFilter, currentTime, currentTarget)
+        if aoeBlockedUntil and aoeBlockedUntil > currentTime then
+            macroCooldownUntil = math.max(macroCooldownUntil, aoeBlockedUntil)
+            return
+        end
+        if processSpellCategory(aoeFilter) then
+            return
         end
     end
 
-    -- Priority #3: PvE
+    -- Priority #3: PvE combo, potem PvE non-combo
     if currentTarget and currentTarget:isMonster() then
-        if processSpellCategory(function(spell) return spell.pve end) then
-            return -- Stop processing other categories if a spell was cast
+        if processSpellCategory(function(s) return s.pve and s.allowCombo end) then
+            return
+        end
+        if processSpellCategory(function(s) return s.pve and not s.allowCombo end) then
+            return
         end
     end
 end
 
 function mod:updateToggleButtonText()
-    if toggleMacroButton then
-        if storage.advancedSpells.macroEnabled then
-            toggleMacroButton:setText("Disable Spell Caster")
-            if toggleMacroButton.setColor then toggleMacroButton:setColor("#90EE90") end
-        else
-            toggleMacroButton:setText("Enable Spell Caster")
-            if toggleMacroButton.setColor then toggleMacroButton:setColor("#FF6347") end
-        end
+    if not toggleMacroButton then return end
+    if storage.advancedSpells.macroEnabled then
+        toggleMacroButton:setText("Disable Spell Caster")
+        if toggleMacroButton.setColor then toggleMacroButton:setColor("#90EE90") end
+    else
+        toggleMacroButton:setText("Enable Spell Caster")
+        if toggleMacroButton.setColor then toggleMacroButton:setColor("#FF6347") end
     end
 end
 
 function mod:updateIconState()
-    if onScreenIcon then
-        if storage.advancedSpells.macroEnabled then
-            if onScreenIcon.text and onScreenIcon.text.setColoredText then
-                onScreenIcon.text:setColoredText({"AdvSpells", "green"})
-            end
-            if onScreenIcon.setOn then
-                onScreenIcon:setOn()
-            end
-        else
-            if onScreenIcon.text and onScreenIcon.text.setColoredText then
-                onScreenIcon.text:setColoredText({"AdvSpells", "white"})
-            end
-            if onScreenIcon.setOff then
-                onScreenIcon:setOff()
-            end
+    if not onScreenIcon then return end
+    if storage.advancedSpells.macroEnabled then
+        if onScreenIcon.text and onScreenIcon.text.setColoredText then
+            onScreenIcon.text:setColoredText({"AdvSpells", "green"})
         end
+        if onScreenIcon.setOn then onScreenIcon:setOn() end
+    else
+        if onScreenIcon.text and onScreenIcon.text.setColoredText then
+            onScreenIcon.text:setColoredText({"AdvSpells", "white"})
+        end
+        if onScreenIcon.setOff then onScreenIcon:setOff() end
     end
 end
 
@@ -274,36 +348,40 @@ function mod:toggleMacro()
     if spellCasterMacro then
         if storage.advancedSpells.macroEnabled then spellCasterMacro:setOn() else spellCasterMacro:setOff() end
     end
-    self:updateToggleButtonText()
-    self:updateIconState()
+    mod:updateToggleButtonText()
+    mod:updateIconState()
 end
 
 function mod:showWindow()
-    if window then window:show(); window:raise(); window:focus(); storage.advancedSpells.windowVisible = true end
+    if not window then return end
+    window:show(); window:raise(); window:focus()
+    storage.advancedSpells.windowVisible = true
 end
+
 function mod:hideWindow()
-    if window then window:hide(); storage.advancedSpells.windowVisible = false end
+    if not window then return end
+    window:hide()
+    storage.advancedSpells.windowVisible = false
 end
+
 function mod:onWindowClose()
     storage.advancedSpells.windowVisible = false
 end
 
 function mod:moveSpellUp()
-    if selectedSpellIndex and selectedSpellIndex > 1 then
-        local spells = storage.advancedSpells.spellList
-        spells[selectedSpellIndex], spells[selectedSpellIndex - 1] = spells[selectedSpellIndex - 1], spells[selectedSpellIndex]
-        selectedSpellIndex = selectedSpellIndex - 1
-        self:renderSpellList()
-    end
+    if not selectedSpellIndex or selectedSpellIndex <= 1 then return end
+    local spells = storage.advancedSpells.spellList
+    spells[selectedSpellIndex], spells[selectedSpellIndex - 1] = spells[selectedSpellIndex - 1], spells[selectedSpellIndex]
+    selectedSpellIndex = selectedSpellIndex - 1
+    mod:renderSpellList()
 end
 
 function mod:moveSpellDown()
-    if selectedSpellIndex and selectedSpellIndex < #storage.advancedSpells.spellList then
-        local spells = storage.advancedSpells.spellList
-        spells[selectedSpellIndex], spells[selectedSpellIndex + 1] = spells[selectedSpellIndex + 1], spells[selectedSpellIndex]
-        selectedSpellIndex = selectedSpellIndex + 1
-        self:renderSpellList()
-    end
+    if not selectedSpellIndex or selectedSpellIndex >= #storage.advancedSpells.spellList then return end
+    local spells = storage.advancedSpells.spellList
+    spells[selectedSpellIndex], spells[selectedSpellIndex + 1] = spells[selectedSpellIndex + 1], spells[selectedSpellIndex]
+    selectedSpellIndex = selectedSpellIndex + 1
+    mod:renderSpellList()
 end
 
 function mod:initialize()
@@ -359,7 +437,7 @@ function mod:initialize()
     spellCasterMacro = macro(100, function() mod:executeSpellLogic() end)
     if storage.advancedSpells.macroEnabled then spellCasterMacro:setOn() else spellCasterMacro:setOff() end
 
-    onScreenIcon = addIcon("AdvSpellsIcon", {text = "", movable = true}, function(iconWidget, isOn)
+    onScreenIcon = addIcon("AdvSpellsIcon", {text = "", movable = true}, function(_, isOn)
         storage.advancedSpells.macroEnabled = isOn
         if spellCasterMacro then if isOn then spellCasterMacro:setOn() else spellCasterMacro:setOff() end end
         mod:updateIconState()
