@@ -1,3 +1,19 @@
+-- Ustaw domyślne pozycje ikon TYLKO jeśli nie ma wpisu w storage._icons
+storage._icons = storage._icons or {}
+local function ensureIconPos(name, x, y)
+  storage._icons[name] = storage._icons[name] or {}
+  local rec = storage._icons[name]
+  if rec.x == nil or rec.y == nil then
+    rec.x = x
+    rec.y = y
+  end
+end
+
+-- Startowe współrzędne (unormowane 0..1) z Twojej listy
+ensureIconPos("cI", 0.075880758807588, 0.41383812010444)
+ensureIconPos("tI", 0.073170731707317, 0.45953002610966)
+
+-- Ikony
 local cIcon = addIcon("cI",{text="Cave\nBot",switchable=false,moveable=true}, function()
   if CaveBot.isOff() then 
     CaveBot.setOn()
@@ -45,4 +61,3 @@ macro(50,function()
     tIcon.text:setColoredText({"Target\n","white","OFF","red"})
   end
 end)
-
