@@ -6,6 +6,18 @@ HealSetupWindow < MainWindow
   text: Healing Setup
   @onEscape: self:hide()
 
+  Button
+    id: closeWindowButton
+    !text: tr('X')
+    font: verdana-11px-rounded
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: -8
+    margin-right: 3
+    size: 18 18
+    color: #FF6347
+    @onClick: self:getParent():hide()
+
   Panel
     id: container
     anchors.fill: parent
