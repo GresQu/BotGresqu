@@ -355,17 +355,15 @@ end
 function mod:showWindow()
     if not window then return end
     window:show(); window:raise(); window:focus()
-    storage.advancedSpells.windowVisible = true
 end
 
 function mod:hideWindow()
     if not window then return end
     window:hide()
-    storage.advancedSpells.windowVisible = false
 end
 
 function mod:onWindowClose()
-    storage.advancedSpells.windowVisible = false
+
 end
 
 function mod:moveSpellUp()
@@ -402,7 +400,6 @@ function mod:initialize()
     storage.advancedSpells.minMonstersAoe = storage.advancedSpells.minMonstersAoe or "3"
     storage.advancedSpells.aoeRange = storage.advancedSpells.aoeRange or "5"
     if storage.advancedSpells.macroEnabled == nil then storage.advancedSpells.macroEnabled = true end
-    if storage.advancedSpells.windowVisible == nil then storage.advancedSpells.windowVisible = false end
 
     window = UI.createWindow('AdvancedSpellCasterWindow', g_ui.getRootWidget())
     if not window then return end
@@ -436,6 +433,19 @@ function mod:initialize()
 
     spellCasterMacro = macro(100, function() mod:executeSpellLogic() end)
     if storage.advancedSpells.macroEnabled then spellCasterMacro:setOn() else spellCasterMacro:setOff() end
+
+    -- [NEW] Ustaw domyślne pozycje ikon TYLKO jeśli brak wpisu w storage._icons
+    storage._icons = storage._icons or {}
+    local function ensureIconPos(name, x, y)
+      storage._icons[name] = storage._icons[name] or {}
+      local rec = storage._icons[name]
+      if rec.x == nil or rec.y == nil then
+        rec.x = x
+        rec.y = y
+      end
+    end
+    -- Startowa pozycja dla ikony AdvancedSpellCaster
+    ensureIconPos("AdvSpellsIcon", 0.072115384615385, 0.69190600522193)
 
     onScreenIcon = addIcon("AdvSpellsIcon", {text = "", movable = true}, function(_, isOn)
         storage.advancedSpells.macroEnabled = isOn
