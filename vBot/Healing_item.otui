@@ -6,6 +6,17 @@ ItemHealingWindow < MainWindow
   text: Item Healing Setup
   @onEscape: self:hide()
 
+  Button
+    id: closeWindowButton
+    !text: tr('X')
+    font: verdana-11px-rounded
+    anchors.top: parent.top
+    anchors.right: parent.right
+    margin-top: -5
+    margin-right: 3
+    size: 20 20
+    color: #FF6347
+    @onClick: self:getParent():hide()
   Panel
     id: hpContainer
     anchors.left: parent.left
