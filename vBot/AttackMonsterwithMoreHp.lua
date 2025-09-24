@@ -85,9 +85,9 @@ AttackMonsterWithMoreIcon = addIcon("Attack High", {
   text = "Attack High",
   movable = true,
   switchable = true
-}, function(_, isOn)
+}, function()
   if not highInitDone then return end
-  highSetEnabled(isOn)
+  highToggle()
 end)
 
 AttackMonsterWithMoreIcon:setSize({ height = 60, width = 60 })
