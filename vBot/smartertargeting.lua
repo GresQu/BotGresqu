@@ -1,7 +1,21 @@
 setDefaultTab("Main")
+
 local sep = UI.Separator()
 sep:setHeight(4)
 sep:setBackgroundColor('#A0B0C0')
+
+-- Ustaw domyślną pozycję ikony TYLKO jeśli nie ma wpisu w storage._icons
+storage._icons = storage._icons or {}
+local function ensureIconPos(name, x, y)
+  storage._icons[name] = storage._icons[name] or {}
+  local rec = storage._icons[name]
+  if rec.x == nil or rec.y == nil then
+    rec.x = x
+    rec.y = y
+  end
+end
+-- Domyślne współrzędne dla pierwszego uruchomienia (nie nadpisują istniejących)
+ensureIconPos("Attack Low", 0.072739632902787, 0.63179347826087)
 
 smartertarg = macro(300, "Attack Low", function()
   if isInPz() then return end
@@ -11,9 +25,9 @@ smartertarg = macro(300, "Attack Low", function()
     ["[General Grade] Ant Shadow"] = 1
   }
 
-  -- Clear the hardcoded examples if we are loading from storage, or initialize if not.
+  -- Load priorities from storage if provided
   if storage.monsterPrioritiesList and #storage.monsterPrioritiesList > 0 then
-    monsterPriorities = {} -- Clear examples if loading from storage
+    monsterPriorities = {}
     local priorityEntries = string.split(storage.monsterPrioritiesList, ",")
     for _, entry in ipairs(priorityEntries) do
       local parts = string.split(entry, ":")
@@ -26,11 +40,11 @@ smartertarg = macro(300, "Attack Low", function()
       end
     end
   end
-  local defaultPriority = math.huge -- For monsters not in the list
 
+  local defaultPriority = math.huge
   local bestTarget = nil
   local bestPriorityFound = defaultPriority
-  local lowestHpAtBestPriority = 101 -- Start higher than max HP percentage
+  local lowestHpAtBestPriority = 101
 
   local currentTarget = g_game.getAttackingCreature()
   if currentTarget and currentTarget:isPlayer() then return end
@@ -38,16 +52,16 @@ smartertarg = macro(300, "Attack Low", function()
   for _, val in pairs(getSpectators()) do
     if val:isMonster() and val:canShoot() and tonumber(storage.distance_attack_smart_high) then
       if getDistanceBetween(player:getPosition(), val:getPosition()) <= tonumber(storage.distance_attack_smart_high) then
-        if val:isPlayer() then goto continue_spectator_loop end -- Skip players
+        if val:isPlayer() then goto continue_spectator_loop end
 
-        local monsterNameForPriority = val:getName():trim() -- Use exact name for priority lookup
-        local monsterNameForIgnore = monsterNameForPriority:lower() -- Use lowercased name for ignore list
+        local nameExact = val:getName():trim()
+        local nameLower = nameExact:lower()
 
         local isIgnored = false
         if storage.ignoreCreatures then
           local ignoreList = string.split(storage.ignoreCreatures, ",")
           for _, ignoredEntry in ipairs(ignoreList) do
-            if monsterNameForIgnore:find(ignoredEntry:lower():trim(), 1, true) then
+            if nameLower:find(ignoredEntry:lower():trim(), 1, true) then
               isIgnored = true
               break
             end
@@ -55,20 +69,16 @@ smartertarg = macro(300, "Attack Low", function()
         end
 
         if not isIgnored then
-          local currentMonsterPriority = monsterPriorities[monsterNameForPriority] or defaultPriority
-          local currentMonsterHp = val:getHealthPercent()
+          local prio = monsterPriorities[nameExact] or defaultPriority
+          local hp = val:getHealthPercent()
 
-          if currentMonsterPriority < bestPriorityFound then
-            -- New best priority found
-            bestPriorityFound = currentMonsterPriority
-            lowestHpAtBestPriority = currentMonsterHp
+          if prio < bestPriorityFound then
+            bestPriorityFound = prio
+            lowestHpAtBestPriority = hp
             bestTarget = val
-          elseif currentMonsterPriority == bestPriorityFound then
-            -- Same priority, check HP
-            if currentMonsterHp < lowestHpAtBestPriority then
-              lowestHpAtBestPriority = currentMonsterHp
-              bestTarget = val
-            end
+          elseif prio == bestPriorityFound and hp < lowestHpAtBestPriority then
+            lowestHpAtBestPriority = hp
+            bestTarget = val
           end
         end
       end
@@ -76,24 +86,59 @@ smartertarg = macro(300, "Attack Low", function()
     ::continue_spectator_loop::
   end
 
-  local mob = bestTarget
-  if mob then
-    if not g_game.isAttacking() or g_game.getAttackingCreature() ~= mob then
-      g_game.attack(mob)
-    end
+  if bestTarget and (not g_game.isAttacking() or g_game.getAttackingCreature() ~= bestTarget) then
+    g_game.attack(bestTarget)
   end
 end)
 
+-- === AdvancedSpellCaster-style controller (jedna prawda stanu) ===
+
+storage.smartertargOn = storage.smartertargOn == true
+local smartInitDone = false
+
+local function smartUpdateIcon()
+  if not smartertargIcon then return end
+  local on = storage.smartertargOn
+  smartertargIcon:setOn(on)
+  smartertargIcon.text:setColoredText({ "Attack Low", on and "green" or "white" })
+end
+
+local function smartSetEnabled(on)
+  on = not not on
+  storage.smartertargOn = on
+  if on then smartertarg:setOn() else smartertarg:setOff() end
+  smartUpdateIcon()
+end
+
+local function smartToggle()
+  smartSetEnabled(not storage.smartertargOn)
+end
+
 smartertargIcon = addIcon("Attack Low", {
-  item = {id = 7995},
+  item = { id = 7995 },
   text = "Attack Low",
-  movable = true
-}, function(icon, isOn)
-  icon.text:setColoredText({
-    "Attack Low", isOn and "green" or "white"
-  })
-  smartertarg.setOn(isOn)
+  movable = true,
+  switchable = true
+}, function(_, isOn)
+  if not smartInitDone then return end
+  smartSetEnabled(isOn)
 end)
 
-smartertargIcon:setSize({height = 60, width = 55})
+smartertargIcon:setSize({ height = 60, width = 55 })
 smartertargIcon.text:setFont('verdana-11px-rounded')
+
+-- Initial sync after load
+schedule(10, function()
+  smartSetEnabled(storage.smartertargOn)
+  smartInitDone = true
+end)
+
+-- Watcher: sync when toggled from Macro list
+macro(200, function()
+  local on = smartertarg.isOn()
+  if on ~= storage.smartertargOn then
+    smartSetEnabled(on)
+  else
+    smartUpdateIcon()
+  end
+end)
