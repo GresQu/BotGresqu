@@ -119,9 +119,9 @@ smartertargIcon = addIcon("Attack Low", {
   text = "Attack Low",
   movable = true,
   switchable = true
-}, function(_, isOn)
+}, function()
   if not smartInitDone then return end
-  smartSetEnabled(isOn)
+  smartToggle()
 end)
 
 smartertargIcon:setSize({ height = 60, width = 55 })
