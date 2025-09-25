@@ -20,7 +20,7 @@ local function detectConfigName()
 end
 
 local configName = detectConfigName()
-warn("Using config: " .. configName)
+--warn("Using config: " .. configName)
 
 -- Foldery
 local vBotFolder     = "bot/" .. configName .. "/vBot"
