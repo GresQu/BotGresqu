@@ -84,7 +84,6 @@ scriptManager.availableScripts = {
     {name = "trade_message", id = "trade_message", file = "trade_message", status = "disable"},
     {name = "afkmsgreply", id = "afkmsgreply", file = "afkmsgreply", status = "disable"},
     {name = "NPC Talk", id = "npc_talk", file = "npc_talk", hidden = false, status = "disable"},
-    {name = "Xeno Menu", id = "xeno_menu", file = "xeno_menu", hidden = true},
 	{name = "Auto_traveler", id = "Auto_traveler", file = "Auto_traveler"}
 
 }
