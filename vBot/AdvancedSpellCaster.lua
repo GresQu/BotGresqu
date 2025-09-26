@@ -238,8 +238,9 @@ function mod:executeSpellLogic()
             if spellFilter(spell)
                 and currentTime >= (spell.lastCast or 0) + spell.delay
                 and not (spell.onTargetOnly and not currentTarget) then
-                -- SAFE MODE: sprawdź czy są przyjaciele na ekranie
-                if spell.aoeSafe or spell.pve then
+
+                -- SAFE MODE: ignoruj rzucanie, jeśli w zasięgu są friendsi
+                if spell.aoeSafe then
                     local playersInRange = mod:getPlayersInRange(5, playerPos, onScreenSpectators)
                     local friendNearby = false
                     for _, p in ipairs(playersInRange) do
@@ -252,7 +253,7 @@ function mod:executeSpellLogic()
                         goto continue_spell
                     end
                 end
-                -- here
+
                 if not comboHasStarted then
                     -- pierwszy ważny spell w tej kategorii
                     say(spell.name)
@@ -275,10 +276,8 @@ function mod:executeSpellLogic()
                     if spell.allowCombo then
                         say(spell.name)
                         spell.lastCast = currentTime
-                        -- aktualizacja ostatniego castu w trybie combo
-                        lastCastMode = thisMode -- nadal "combo"
+                        lastCastMode = thisMode
                         lastCastAt = currentTime
-                        -- ostatni delay combo determinuje bramkę do non‑combo
                         lastCastDelayMs = tonumber(spell.delay) or lastCastDelayMs
                     end
                 end
@@ -290,7 +289,7 @@ function mod:executeSpellLogic()
         return spellCastedInThisTick
     end
 
-    -- Priority #1: PvP (rezerwacja tiku jeśli blokuje tylko bramka trybu)
+    -- Priority #1: PvP
     if currentTarget and currentTarget:isPlayer() then
         local pvpBlockedUntil = categoryModeBlockedUntil(function(s) return s.pvp end, currentTime, currentTarget)
         if pvpBlockedUntil and pvpBlockedUntil > currentTime then
@@ -302,7 +301,7 @@ function mod:executeSpellLogic()
         end
     end
 
-    -- Priority #2: AoE (rezerwacja tiku jeśli blokuje tylko bramka trybu)
+    -- Priority #2: AoE
     local minMonsters = tonumber(storage.advancedSpells.minMonstersAoe) or 3
     local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 5
     local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
@@ -331,16 +330,6 @@ function mod:executeSpellLogic()
     end
 end
 
-function mod:updateToggleButtonText()
-    if not toggleMacroButton then return end
-    if storage.advancedSpells.macroEnabled then
-        toggleMacroButton:setText("Disable Spell Caster")
-        if toggleMacroButton.setColor then toggleMacroButton:setColor("#90EE90") end
-    else
-        toggleMacroButton:setText("Enable Spell Caster")
-        if toggleMacroButton.setColor then toggleMacroButton:setColor("#FF6347") end
-    end
-end
 
 function mod:updateIconState()
     if not onScreenIcon then return end
