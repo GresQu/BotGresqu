@@ -5,7 +5,7 @@ sep:setBackgroundColor('#A0B0C0')
 -- vBot/AdvancedSpellCaster.lua
 local mod = {
     name = "AdvancedSpellCaster",
-    version = "1.3.3", -- Updated version with mode gate and priority fix
+    version = "1.3.4", -- Safe ignoruje friendów i działa też dla PvE
     author = "GresQu"
 }
 
@@ -105,7 +105,7 @@ function mod:addSpell()
         pve = false,
         pvp = false,
         aoe = false,
-        aoeSafe = false,
+        aoeSafe = false,       -- teraz „safe” (ignoruje friendów) działa też dla PvE
         onTargetOnly = false,
         allowCombo = false,
         lastCast = 0
@@ -182,15 +182,41 @@ function mod:renderSpellList()
     end
 end
 
-function mod:getPlayersInRange(range, playerPos, onScreenSpectators)
+-- Helper: czy to gracz niebędący znajomym (z vlib:isFriend), z pominięciem siebie
+local function isNonFriendPlayer(creature)
+    if not creature or not creature.isPlayer or not creature:isPlayer() then
+        return false
+    end
+    local cname = creature:getName()
+    if not cname then
+        return true -- zachowawczo traktuj brak nazwy jako niefrienda
+    end
+    if cname:lower() == name():lower() then
+        return false
+    end
+    if type(isFriend) == "function" then
+        return not isFriend(cname)
+    end
+    -- fallback: brak isFriend => traktuj jako niefrienda
+    return true
+end
+
+-- Rozszerzona wersja: opcjonalny ignoreFriends
+function mod:getPlayersInRange(range, playerPos, onScreenSpectators, ignoreFriends)
     if not playerPos or type(playerPos.x) ~= "number" then return {} end
     if not onScreenSpectators or type(onScreenSpectators) ~= "table" then return {} end
     local players = {}
     for _, spec in ipairs(onScreenSpectators) do
-        if spec and spec:isPlayer() and spec ~= player then
+        if spec and spec.isPlayer and spec:isPlayer() and spec ~= player then
             local specPos = spec:getPosition()
             if specPos and calculateDistanceBetween(playerPos, specPos) <= range then
-                table.insert(players, spec)
+                if ignoreFriends then
+                    if isNonFriendPlayer(spec) then
+                        table.insert(players, spec)
+                    end
+                else
+                    table.insert(players, spec)
+                end
             end
         end
     end
@@ -224,10 +250,12 @@ function mod:executeSpellLogic()
     local currentTarget = g_game.getAttackingCreature()
     local onScreenSpectators = g_map.getSpectators(playerPos, false) or {}
 
+    -- tylko niefriendzi w zasięgu 7 pól (dla „safe”)
+    local playersNearbyNonFriends = #mod:getPlayersInRange(7, playerPos, onScreenSpectators, true) > 0
+
     local function processSpellCategory(spellFilter)
         local comboHasStarted = false
         local spellCastedInThisTick = false
-
         for _, spell in ipairs(storage.advancedSpells.spellList) do
             local thisMode = getSpellMode(spell)
             -- bramka przełączania trybu (combo <-> noncombo)
@@ -277,7 +305,7 @@ function mod:executeSpellLogic()
     end
 
     -- Priority #1: PvP (rezerwacja tiku jeśli blokuje tylko bramka trybu)
-    if currentTarget and currentTarget:isPlayer() then
+    if currentTarget and currentTarget.isPlayer and currentTarget:isPlayer() then
         local pvpBlockedUntil = categoryModeBlockedUntil(function(s) return s.pvp end, currentTime, currentTarget)
         if pvpBlockedUntil and pvpBlockedUntil > currentTime then
             macroCooldownUntil = math.max(macroCooldownUntil, pvpBlockedUntil)
@@ -292,10 +320,12 @@ function mod:executeSpellLogic()
     local minMonsters = tonumber(storage.advancedSpells.minMonstersAoe) or 3
     local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 5
     local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
-    local playersNearby = #mod:getPlayersInRange(7, playerPos, onScreenSpectators) > 0
 
     if monsterCount >= minMonsters then
-        local aoeFilter = function(s) return s.aoe and not (s.aoeSafe and playersNearby) end
+        -- safe: blokuj tylko, gdy są niefriendzi; znajomi nie blokują
+        local aoeFilter = function(s)
+            return s.aoe and not (s.aoeSafe and playersNearbyNonFriends)
+        end
         local aoeBlockedUntil = categoryModeBlockedUntil(aoeFilter, currentTime, currentTarget)
         if aoeBlockedUntil and aoeBlockedUntil > currentTime then
             macroCooldownUntil = math.max(macroCooldownUntil, aoeBlockedUntil)
@@ -307,11 +337,16 @@ function mod:executeSpellLogic()
     end
 
     -- Priority #3: PvE combo, potem PvE non-combo
-    if currentTarget and currentTarget:isMonster() then
-        if processSpellCategory(function(s) return s.pve and s.allowCombo end) then
+    -- safe: jeśli s.aoeSafe == true, blokuj tylko przy obecności niefriendów; znajomi nie blokują
+    if currentTarget and currentTarget.isMonster and currentTarget:isMonster() then
+        if processSpellCategory(function(s)
+            return s.pve and s.allowCombo and not (s.aoeSafe and playersNearbyNonFriends)
+        end) then
             return
         end
-        if processSpellCategory(function(s) return s.pve and not s.allowCombo end) then
+        if processSpellCategory(function(s)
+            return s.pve and not s.allowCombo and not (s.aoeSafe and playersNearbyNonFriends)
+        end) then
             return
         end
     end
@@ -363,7 +398,7 @@ function mod:hideWindow()
 end
 
 function mod:onWindowClose()
-
+    -- optional
 end
 
 function mod:moveSpellUp()
@@ -418,10 +453,9 @@ function mod:initialize()
 
     minMonstersAoeInput:setText(storage.advancedSpells.minMonstersAoe)
     aoeRangeInput:setText(storage.advancedSpells.aoeRange)
-
-    addSpellButton.onClick = function() mod:addSpell() end
-    minMonstersAoeInput.onTextChange = function(_, newText) storage.advancedSpells.minMonstersAoe = newText end
-    aoeRangeInput.onTextChange = function(_, newText) storage.advancedSpells.aoeRange = newText end
+    if addSpellButton then addSpellButton.onClick = function() mod:addSpell() end end
+    if minMonstersAoeInput then minMonstersAoeInput.onTextChange = function(_, newText) storage.advancedSpells.minMonstersAoe = newText end end
+    if aoeRangeInput then aoeRangeInput.onTextChange = function(_, newText) storage.advancedSpells.aoeRange = newText end end
     if toggleMacroButton then toggleMacroButton.onClick = function() mod:toggleMacro() end end
     if moveSpellUpButton then moveSpellUpButton.onClick = function() mod:moveSpellUp() end end
     if moveSpellDownButton then moveSpellDownButton.onClick = function() mod:moveSpellDown() end end
