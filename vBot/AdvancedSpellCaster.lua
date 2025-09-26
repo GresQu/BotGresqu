@@ -238,7 +238,21 @@ function mod:executeSpellLogic()
             if spellFilter(spell)
                 and currentTime >= (spell.lastCast or 0) + spell.delay
                 and not (spell.onTargetOnly and not currentTarget) then
-
+                -- SAFE MODE: sprawdź czy są przyjaciele na ekranie
+                if spell.aoeSafe or spell.pve then
+                    local playersInRange = mod:getPlayersInRange(5, playerPos, onScreenSpectators)
+                    local friendNearby = false
+                    for _, p in ipairs(playersInRange) do
+                        if isFriend and isFriend(p) then
+                            friendNearby = true
+                            break
+                        end
+                    end
+                    if friendNearby then
+                        goto continue_spell
+                    end
+                end
+                -- here
                 if not comboHasStarted then
                     -- pierwszy ważny spell w tej kategorii
                     say(spell.name)
