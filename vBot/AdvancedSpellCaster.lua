@@ -5,7 +5,7 @@ sep:setBackgroundColor('#A0B0C0')
 -- vBot/AdvancedSpellCaster.lua
 local mod = {
     name = "AdvancedSpellCaster",
-    version = "1.3.4", -- Safe ignoruje friendów i działa też dla PvE
+    version = "1.3.6", -- Chebyshev AoE; Safe full-screen; PvE/PvP full-screen
     author = "GresQu"
 }
 
@@ -40,7 +40,7 @@ local lastCastDelayMs = 0
 storage.advancedSpells = storage.advancedSpells or {}
 storage.advancedSpells.spellList = storage.advancedSpells.spellList or {}
 
--- Helper: dystans
+-- Helper: dystans Euklidesowy (pozostawiony dla innych miejsc)
 local function calculateDistanceBetween(pos1, pos2)
     if not pos1 or not pos2
         or type(pos1.x) ~= "number" or type(pos1.y) ~= "number" or type(pos1.z) ~= "number"
@@ -51,6 +51,21 @@ local function calculateDistanceBetween(pos1, pos2)
     local dy = pos1.y - pos2.y
     local dz = pos1.z - pos2.z
     return math.sqrt(dx*dx + dy*dy + dz*dz)
+end
+
+-- NEW: dystans Chebysheva 2D (kwadratowy zasięg jak na 8 kierunków)
+local function chebyshevDistance2D(pos1, pos2)
+    if not pos1 or not pos2
+        or type(pos1.x) ~= "number" or type(pos1.y) ~= "number"
+        or type(pos2.x) ~= "number" or type(pos2.y) ~= "number" then
+        return math.huge
+    end
+    if pos1.z ~= pos2.z then
+        return math.huge
+    end
+    local dx = math.abs(pos1.x - pos2.x)
+    local dy = math.abs(pos1.y - pos2.y)
+    return math.max(dx, dy)
 end
 
 -- Tryb spella
@@ -81,7 +96,6 @@ local function categoryModeBlockedUntil(spellFilter, tnow, currentTarget)
             if not canCastMode(mode, tnow) then
                 blocked = true
             else
-                -- Da się rzucić teraz w tej kategorii
                 return nil
             end
         end
@@ -105,7 +119,7 @@ function mod:addSpell()
         pve = false,
         pvp = false,
         aoe = false,
-        aoeSafe = false,       -- teraz „safe” (ignoruje friendów) działa też dla PvE
+        aoeSafe = false,       -- „safe” (ignore friends) działa dla AoE i PvE
         onTargetOnly = false,
         allowCombo = false,
         lastCast = 0
@@ -189,7 +203,7 @@ local function isNonFriendPlayer(creature)
     end
     local cname = creature:getName()
     if not cname then
-        return true -- zachowawczo traktuj brak nazwy jako niefrienda
+        return true
     end
     if cname:lower() == name():lower() then
         return false
@@ -197,11 +211,21 @@ local function isNonFriendPlayer(creature)
     if type(isFriend) == "function" then
         return not isFriend(cname)
     end
-    -- fallback: brak isFriend => traktuj jako niefrienda
     return true
 end
 
--- Rozszerzona wersja: opcjonalny ignoreFriends
+-- Full-screen: czy na ekranie jest jakikolwiek niefriend
+local function hasNonFriendOnScreen(onScreenSpectators)
+    if not onScreenSpectators or type(onScreenSpectators) ~= "table" then return false end
+    for _, spec in ipairs(onScreenSpectators) do
+        if isNonFriendPlayer(spec) then
+            return true
+        end
+    end
+    return false
+end
+
+-- Opcjonalne: nadal dostępne, jeśli kiedyś potrzebne lokalne zasięgi
 function mod:getPlayersInRange(range, playerPos, onScreenSpectators, ignoreFriends)
     if not playerPos or type(playerPos.x) ~= "number" then return {} end
     if not onScreenSpectators or type(onScreenSpectators) ~= "table" then return {} end
@@ -223,6 +247,7 @@ function mod:getPlayersInRange(range, playerPos, onScreenSpectators, ignoreFrien
     return players
 end
 
+-- AoE: licznik potworów w promieniu Chebysheva (kwadratowym)
 function mod:getMonsterCountInRange(range, playerPos, onScreenSpectators)
     if not playerPos or type(playerPos.x) ~= "number" then return 0 end
     if not onScreenSpectators or type(onScreenSpectators) ~= "table" then return 0 end
@@ -230,7 +255,7 @@ function mod:getMonsterCountInRange(range, playerPos, onScreenSpectators)
     for _, creature in ipairs(onScreenSpectators) do
         if creature:isMonster() then
             local monsterPos = creature:getPosition()
-            if monsterPos and calculateDistanceBetween(playerPos, monsterPos) <= range then
+            if monsterPos and chebyshevDistance2D(playerPos, monsterPos) <= range then
                 count = count + 1
             end
         end
@@ -250,8 +275,8 @@ function mod:executeSpellLogic()
     local currentTarget = g_game.getAttackingCreature()
     local onScreenSpectators = g_map.getSpectators(playerPos, false) or {}
 
-    -- tylko niefriendzi w zasięgu 7 pól (dla „safe”)
-    local playersNearbyNonFriends = #mod:getPlayersInRange(7, playerPos, onScreenSpectators, true) > 0
+    -- FULL SCREEN: safe patrzy na cały ekran (niefriendzi)
+    local nonFriendOnScreen = hasNonFriendOnScreen(onScreenSpectators)
 
     local function processSpellCategory(spellFilter)
         local comboHasStarted = false
@@ -304,7 +329,7 @@ function mod:executeSpellLogic()
         return spellCastedInThisTick
     end
 
-    -- Priority #1: PvP (rezerwacja tiku jeśli blokuje tylko bramka trybu)
+    -- Priority #1: PvP — FULL SCREEN
     if currentTarget and currentTarget.isPlayer and currentTarget:isPlayer() then
         local pvpBlockedUntil = categoryModeBlockedUntil(function(s) return s.pvp end, currentTime, currentTarget)
         if pvpBlockedUntil and pvpBlockedUntil > currentTime then
@@ -316,15 +341,15 @@ function mod:executeSpellLogic()
         end
     end
 
-    -- Priority #2: AoE (rezerwacja tiku jeśli blokuje tylko bramka trybu)
+    -- Priority #2: AoE — aoeRange używane TYLKO do liczenia potworów (Chebyshev)
     local minMonsters = tonumber(storage.advancedSpells.minMonstersAoe) or 3
     local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 5
     local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
 
     if monsterCount >= minMonsters then
-        -- safe: blokuj tylko, gdy są niefriendzi; znajomi nie blokują
+        -- safe: blokuj tylko, gdy są niefriendzi na ekranie (FULL SCREEN)
         local aoeFilter = function(s)
-            return s.aoe and not (s.aoeSafe and playersNearbyNonFriends)
+            return s.aoe and not (s.aoeSafe and nonFriendOnScreen)
         end
         local aoeBlockedUntil = categoryModeBlockedUntil(aoeFilter, currentTime, currentTarget)
         if aoeBlockedUntil and aoeBlockedUntil > currentTime then
@@ -336,16 +361,15 @@ function mod:executeSpellLogic()
         end
     end
 
-    -- Priority #3: PvE combo, potem PvE non-combo
-    -- safe: jeśli s.aoeSafe == true, blokuj tylko przy obecności niefriendów; znajomi nie blokują
+    -- Priority #3: PvE — FULL SCREEN; safe blokuje przy niefriendach na ekranie
     if currentTarget and currentTarget.isMonster and currentTarget:isMonster() then
         if processSpellCategory(function(s)
-            return s.pve and s.allowCombo and not (s.aoeSafe and playersNearbyNonFriends)
+            return s.pve and s.allowCombo and not (s.aoeSafe and nonFriendOnScreen)
         end) then
             return
         end
         if processSpellCategory(function(s)
-            return s.pve and not s.allowCombo and not (s.aoeSafe and playersNearbyNonFriends)
+            return s.pve and not s.allowCombo and not (s.aoeSafe and nonFriendOnScreen)
         end) then
             return
         end
@@ -398,7 +422,6 @@ function mod:hideWindow()
 end
 
 function mod:onWindowClose()
-    -- optional
 end
 
 function mod:moveSpellUp()
@@ -468,7 +491,7 @@ function mod:initialize()
     spellCasterMacro = macro(100, function() mod:executeSpellLogic() end)
     if storage.advancedSpells.macroEnabled then spellCasterMacro:setOn() else spellCasterMacro:setOff() end
 
-    -- [NEW] Ustaw domyślne pozycje ikon TYLKO jeśli brak wpisu w storage._icons
+    -- Domyślne pozycje ikon (tylko jeśli brak wpisu)
     storage._icons = storage._icons or {}
     local function ensureIconPos(name, x, y)
       storage._icons[name] = storage._icons[name] or {}
@@ -478,7 +501,6 @@ function mod:initialize()
         rec.y = y
       end
     end
-    -- Startowa pozycja dla ikony AdvancedSpellCaster
     ensureIconPos("AdvSpellsIcon", 0.072115384615385, 0.69190600522193)
 
     onScreenIcon = addIcon("AdvSpellsIcon", {text = "", movable = true}, function(_, isOn)
