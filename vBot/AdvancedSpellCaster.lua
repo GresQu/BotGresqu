@@ -5,7 +5,7 @@ sep:setBackgroundColor('#A0B0C0')
 -- vBot/AdvancedSpellCaster.lua
 local mod = {
     name = "AdvancedSpellCaster",
-    version = "1.3.6", -- Chebyshev AoE; Safe full-screen; PvE/PvP full-screen
+    version = "1.3.6", --  AoE; Safe full-screen; PvE/PvP full-screen
     author = "GresQu"
 }
 
@@ -265,116 +265,86 @@ end
 
 function mod:executeSpellLogic()
     if not storage.advancedSpells.macroEnabled then return end
-
     local currentTime = now
     if currentTime < macroCooldownUntil then return end
 
     local playerPos = player:getPosition()
     if not playerPos then return end
-
     local currentTarget = g_game.getAttackingCreature()
     local onScreenSpectators = g_map.getSpectators(playerPos, false) or {}
-
-    -- FULL SCREEN: safe patrzy na cały ekran (niefriendzi)
     local nonFriendOnScreen = hasNonFriendOnScreen(onScreenSpectators)
+
+    local minMonsters = tonumber(storage.advancedSpells.minMonstersAoe) or 2
+    local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 3
+    local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
 
     local function processSpellCategory(spellFilter)
         local comboHasStarted = false
         local spellCastedInThisTick = false
         for _, spell in ipairs(storage.advancedSpells.spellList) do
             local thisMode = getSpellMode(spell)
-            -- bramka przełączania trybu (combo <-> noncombo)
-            if not canCastMode(thisMode, currentTime) then
-                goto continue_spell
-            end
+            if not canCastMode(thisMode, currentTime) then goto continue_spell end
 
-            if spellFilter(spell)
-                and currentTime >= (spell.lastCast or 0) + spell.delay
+            if spellFilter(spell) and currentTime >= (spell.lastCast or 0) + spell.delay
                 and not (spell.onTargetOnly and not currentTarget) then
 
                 if not comboHasStarted then
-                    -- pierwszy ważny spell w tej kategorii
                     say(spell.name)
                     spell.lastCast = currentTime
                     spellCastedInThisTick = true
-
-                    -- aktualizacja stanu przełącznika trybu
                     lastCastMode = thisMode
                     lastCastAt = currentTime
                     lastCastDelayMs = tonumber(spell.delay) or 0
-
-                    if spell.allowCombo then
-                        comboHasStarted = true
-                    else
-                        -- non‑combo: kończ kategorię po jednym rzucie
-                        return true
-                    end
+                    if spell.allowCombo then comboHasStarted = true else return true end
                 else
-                    -- combo aktywne; dopuszczamy tylko kolejne allowCombo
                     if spell.allowCombo then
                         say(spell.name)
                         spell.lastCast = currentTime
-                        -- aktualizacja ostatniego castu w trybie combo
-                        lastCastMode = thisMode -- nadal "combo"
+                        lastCastMode = thisMode
                         lastCastAt = currentTime
-                        -- ostatni delay combo determinuje bramkę do non‑combo
                         lastCastDelayMs = tonumber(spell.delay) or lastCastDelayMs
                     end
                 end
             end
-
             ::continue_spell::
         end
-
         return spellCastedInThisTick
     end
 
-    -- Priority #1: PvP — FULL SCREEN
-    if currentTarget and currentTarget.isPlayer and currentTarget:isPlayer() then
-        local pvpBlockedUntil = categoryModeBlockedUntil(function(s) return s.pvp end, currentTime, currentTarget)
-        if pvpBlockedUntil and pvpBlockedUntil > currentTime then
-            macroCooldownUntil = math.max(macroCooldownUntil, pvpBlockedUntil)
-            return
-        end
-        if processSpellCategory(function(s) return s.pvp end) then
-            return
-        end
-    end
-
-    -- Priority #2: AoE — aoeRange używane TYLKO do liczenia potworów (Chebyshev)
-    local minMonsters = tonumber(storage.advancedSpells.minMonstersAoe) or 3
-    local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 5
-    local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
-
-    if monsterCount >= minMonsters then
-        -- safe: blokuj tylko, gdy są niefriendzi na ekranie (FULL SCREEN)
-        local aoeFilter = function(s)
-            return s.aoe and not (s.aoeSafe and nonFriendOnScreen)
-        end
-        local aoeBlockedUntil = categoryModeBlockedUntil(aoeFilter, currentTime, currentTarget)
-        if aoeBlockedUntil and aoeBlockedUntil > currentTime then
-            macroCooldownUntil = math.max(macroCooldownUntil, aoeBlockedUntil)
-            return
-        end
-        if processSpellCategory(aoeFilter) then
-            return
-        end
-    end
-
-    -- Priority #3: PvE — FULL SCREEN; safe blokuje przy niefriendach na ekranie
-    if currentTarget and currentTarget.isMonster and currentTarget:isMonster() then
-        if processSpellCategory(function(s)
-            return s.pve and s.allowCombo and not (s.aoeSafe and nonFriendOnScreen)
-        end) then
-            return
-        end
-        if processSpellCategory(function(s)
-            return s.pve and not s.allowCombo and not (s.aoeSafe and nonFriendOnScreen)
-        end) then
-            return
-        end
+    
+-- 1. PVP (najwyższy priorytet)
+if currentTarget and currentTarget:isPlayer() then
+    if processSpellCategory(function(s)
+        return s.pvp
+    end) then
+        return
     end
 end
+
+-- 2. AOE (TYLKO jeśli >= minMonsters)
+if monsterCount >= minMonsters then
+    local aoeFilter = function(s)
+        return s.aoe
+           and not (s.aoeSafe and nonFriendOnScreen)
+           and (not s.isAttacking or currentTarget)
+    end
+
+    if processSpellCategory(aoeFilter) then
+        return
+    end
+end
+
+-- 3. PVE SINGLE TARGET (z isAttacking check)
+if true then  -- zawsze próbuj (nawet bez currentTarget)
+    local pveFilter = function(s)
+        return s.pve
+           and not s.aoe
+           and (not s.isAttacking or currentTarget) 
+    end
+    if processSpellCategory(pveFilter) then return end
+end
+end
+
 
 function mod:updateToggleButtonText()
     if not toggleMacroButton then return end
