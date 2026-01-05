@@ -23,7 +23,7 @@ local scriptManager = {
 local sep = UI.Separator()
 sep:setHeight(4)
 sep:setBackgroundColor('#A0B0C0')
-authorLabel = UI.Label("- Made By GresQu - v1.05")
+authorLabel = UI.Label("- Made By GresQu - v1.06")
 authorLabel:setColor("yellow")
 local sep1 = UI.Separator()
 sep1:setHeight(4)
@@ -35,8 +35,8 @@ storage.scriptManager = storage.scriptManager or {}
 -- disable ustawia status skryptu na off ale nie usuwa go calkowicie, uzytkownik dalej moze go wlaczyc jesli nie jest hidden 
 scriptManager.availableScripts = {
     {name = "Warning System", id = "warning", file = "warning", hidden = true},
-    {name = "Updater", id = "Updater", file = "updater"},
-    {name = "profile_selector", id = "profile_selector", file = "profile_selector_ui"},
+    {name = "Updater", id = "Updater", file = "updater", status = "disable"},
+    {name = "profile_selector", id = "profile_selector", file = "profile_selector_ui", status = "disable"},
     {name = "FriendList", id = "myFriendList", file = "myFriendList", hidden = true},
     {name = "Alarms", id = "alarms", file = "alarms"},
     {name = "Auto Friend Party", id = "auto_friend_party", file = "auto_friend_party"},
@@ -48,14 +48,14 @@ scriptManager.availableScripts = {
     {name = "Attack Low", id = "smartertargeting", file = "smartertargeting"},
     {name = "Attack High", id = "AttackMonsterwithMoreHp", file = "AttackMonsterwithMoreHp"},
     {name = "Effect Avoider", id = "effect_avoider", file = "effect_avoider"},
-    {name = "exp_gain", id = "exp_gain", file = "exp_gain"},
+    {name = "exp_gain", id = "exp_gain", file = "exp_gain", status = "disable"},
     {name = "Cast_Spell", id = "Cast_Spell", file = "_z_spell_cast", status = "disable"},
     {name = "Icon Cave-Target", id = "ToogleCaveTarg", file = "ToogleCaveTarg"},
     {name = "Containers", id = "Containers", file = "Containers"},
     {name = "Sense_last_target", id = "Sense_last_target", file = "Sense_last_target"},
     {name = "Auto Follow Name", id = "Auto Follow", file = "AutoFollowName"},
     {name = "auto_follow_attacker", id = "auto_follow_attacker", file = "auto_follow_attacker"},
-    {name = "mana shield", id = "mana_shield", file = "mana_shield"},
+    {name = "mana shield", id = "mana_shield", file = "mana_shield", status = "disable"},
     {name = "Hold_Target", id = "Hold_Target", file = "hold_target"},
 	{name = "Bug_map", id = "Bug_map", file = "Bug_map"},
     {name = "TurnToTarget", id = "TurnToTarget", file = "TurnToTarget"},
