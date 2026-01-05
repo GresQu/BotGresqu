@@ -5,7 +5,7 @@ sep:setBackgroundColor('#A0B0C0')
 -- vBot/AdvancedSpellCaster.lua
 local mod = {
     name = "AdvancedSpellCaster",
-    version = "1.7.0",
+    version = "1.7.1-Stable", -- Logika v1.7 + Stare UI
     author = "GresQu"
 }
 
@@ -25,7 +25,6 @@ local controlPanel = nil
 local spellCasterMacro = nil
 local onScreenIcon = nil
 local mainPanel = nil
-local debugLabel = nil -- Zostawiamy jako nil, aby logika debugowania się nie odpalała
 
 local selectedSpellIndex = nil
 local macroCooldownUntil = 0
@@ -84,12 +83,9 @@ local function hasNonFriendOnScreen(spectators)
     return false
 end
 
--- LOGIKA GŁÓWNA (z v1.7.0)
+-- LOGIKA GŁÓWNA (Poprawiona v1.7)
 function mod:executeSpellLogic()
-    if not storage.advancedSpells.macroEnabled then 
-        if debugLabel then debugLabel:setText("OFF") end
-        return 
-    end
+    if not storage.advancedSpells.macroEnabled then return end
     
     local currentTime = now
     if currentTime < macroCooldownUntil then return end
@@ -105,16 +101,14 @@ function mod:executeSpellLogic()
     local aoeRange = tonumber(storage.advancedSpells.aoeRange) or 3
     local monsterCount = mod:getMonsterCountInRange(aoeRange, playerPos, onScreenSpectators)
 
-    -- >>> LOGIKA DECYZYJNA <<<
+    -- Decyzja o trybie AoE
     local validAoECandidateExists = false
-    
     if monsterCount >= minMonsters then
         for _, s in ipairs(storage.advancedSpells.spellList) do
             if s.aoe then
                 local conditionsMet = true
                 if s.onTargetOnly and not currentTarget then conditionsMet = false end
                 if s.aoeSafe and nonFriendOnScreen then conditionsMet = false end
-                
                 if conditionsMet then
                     validAoECandidateExists = true
                     break
@@ -124,12 +118,6 @@ function mod:executeSpellLogic()
     end
 
     local forceAoEMode = (monsterCount >= minMonsters) and validAoECandidateExists
-
-    -- Debug label jest nil, wiec to sie nie wykona (bezpieczne)
-    if debugLabel then
-        debugLabel:setText(string.format("Mobs: %d | AoE Lock: %s", monsterCount, forceAoEMode and "YES" or "NO"))
-        debugLabel:setColor(forceAoEMode and "#00FF00" or "#FFA500")
-    end
 
     local function processSpellCategory(spellFilter)
         local comboHasStarted = false
@@ -177,7 +165,6 @@ function mod:executeSpellLogic()
                and not (s.aoeSafe and nonFriendOnScreen)
                and (not s.onTargetOnly or currentTarget)
         end
-        
         processSpellCategory(aoeFilter)
         return 
     end
@@ -303,9 +290,9 @@ function mod:initialize()
 
     mod:renderSpellList()
     mod:updateToggleButtonText()
+    mod:hideWindow() -- Ukryj na starcie
     
-    -- >>> PRZYWRÓCONY STARY PANEL (bez debuga) <<<
-    -- Dodano 'layout: anchor' dla pewnosci, zeby nie bylo bledu w zadnej wersji vBota
+    -- STARY, PROSTY PANEL (BEZ DEBUGA, BEZ BLĘDÓW)
     controlPanel = setupUI([[
 Panel
   id: advancedSpellCasterControlPanel
@@ -324,7 +311,6 @@ Panel
     color: orange
   ]])
   
-    -- Stara obsługa przycisku
     controlPanel:getChildById('openAdvSpellWindowButton').onClick = function()
         if window:isVisible() then mod:hideWindow() else mod:showWindow() end
     end
@@ -352,6 +338,7 @@ function mod:cleanup()
     if onScreenIcon then onScreenIcon:destroy() end
 end
 
+-- POPRAWIONE WYWOŁANIE (dwukropek zamiast kropki)
 mod:initialize()
 
-
+g_game.talk("AdvSpells v1.7.1 Loaded")
