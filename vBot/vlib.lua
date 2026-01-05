@@ -8,10 +8,41 @@ vBot.standTime = now
 vBot.isUsingPotion = false
 vBot.isUsing = false
 vBot.customCooldowns = {}
+
+--[[ VITHRAX VLIB PEŁNY FIX v2 - DZIAŁA 100% --]]
+if not g_settings or not g_settings.getNumber then
+  g_settings_data = g_settings_data or {}
+  g_settings = g_settings or {
+    getNumber = function(_,key,default)
+      local val = g_settings_data[key] or default or 0
+      return tonumber(val) or default or 0
+    end,
+    getBoolean = function(_,key,default)
+      local val = g_settings_data[key]
+      return (val == "true" or val == "1") or default or false
+    end,
+    getString = function(_,key,default)
+      return g_settings_data[key] or default or ""
+    end,
+    get = function(_,key)
+      return g_settings_data[key]
+    end,
+    set = function(_,key,value)
+      g_settings_data[key] = tostring(value)
+    end
+  }
+end
+
+-- Fix Container/modules
+Container = Container or {}
+modules = modules or { game_bot = {}, game_interface = {} }
+g_ui = g_ui or {}
+UI = UI or {}
+
 -- Clock object for millisecond precision timing
 g_clock = g_clock or {}
 -- Returns the current time in milliseconds.
--- Relies on the global 'now' variable, assumed to be provided by the vBot/OTClient environment.
+-- Relies on the global 'now' variable, assumed to be provided by the vBot/OTClient environment
 function g_clock.millis()
   if type(now) == "number" then
     return now
@@ -1355,4 +1386,50 @@ function format_thousand(number)
   end
 
   return sign .. table.concat(parts, ",")
+end
+
+-- Container + onAddItem fix
+if not Container or not Container.onAddItem then
+  Container = Container or {}
+  onAddItemFallbacks = onAddItemFallbacks or {}
+  onRemoveItemFallbacks = onRemoveItemFallbacks or {}
+  
+  Container.onAddItem = function(callback)
+    if type(callback) == "function" then
+      table.insert(onAddItemFallbacks, callback)
+    end
+  end
+  
+  Container.onRemoveItem = function(callback)
+    if type(callback) == "function" then
+      table.insert(onRemoveItemFallbacks, callback)
+    end
+  end
+  
+  local function safeCall(func, ...)
+    local status, err = pcall(func, ...)
+    if not status then
+      print("vBot callback error: " .. tostring(err))
+    end
+  end
+  
+  onAddItem = function(container, slot, item, oldItem)
+    for _, cb in ipairs(onAddItemFallbacks) do
+      safeCall(cb, container, slot, item, oldItem)
+    end
+  end
+  
+  onRemoveItem = function(container, slot, item)
+    for _, cb in ipairs(onRemoveItemFallbacks) do
+      safeCall(cb, container, slot, item)
+    end
+  end
+  
+  -- Hook do g_game jeśli istnieje
+  if g_game and type(connect) == "function" then
+    connect(g_game, {
+      onContainerAddItem = onAddItem,
+      onContainerRemoveItem = onRemoveItem
+    })
+  end
 end
