@@ -172,7 +172,7 @@ pve_aoe_spell = macro(200, "PvE Aoe Spell", function()
     local players = getPlayerss(7)
     local playerOnScreen = #players > 0
 
-    if not playerOnScreen and getMonsters(tonumber(storage.AoeRange)) >= tonumber(storage.MonsterLower) then
+    if getMonsters(tonumber(storage.AoeRange)) >= tonumber(storage.MonsterLower) then
         say(storage.FirstSpellPvEAoe)
     elseif g_game.isAttacking() then
         say(storage.FirstSpellPvETarget)
