@@ -340,5 +340,3 @@ end
 
 -- POPRAWIONE WYWOŁANIE (dwukropek zamiast kropki)
 mod:initialize()
-
-g_game.talk("AdvSpells v1.7.1 Loaded")
