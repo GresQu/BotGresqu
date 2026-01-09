@@ -1,8 +1,27 @@
 local HTTP = modules._G.HTTP
 local updateInProgress = false
 
--- Funkcja wykrywająca aktualny config
+-- Funkcja wykrywająca aktualny config (działa też gdy bot OFF)
 local function detectConfigName()
+  -- 1) z g_settings (najpewniejsze, bo bot zapisuje tam config)
+  if g_settings and g_settings.getNode then
+    local settings = g_settings.getNode('bot')
+    if type(settings) == "table" then
+      for _, s in ipairs(settings) do
+        if type(s) == "table" and s.enabled and type(s.config) == "string" and s.config ~= "" then
+          return s.config
+        end
+      end
+      -- jeśli żaden nie jest enabled, weź pierwszy sensowny config
+      for _, s in ipairs(settings) do
+        if type(s) == "table" and type(s.config) == "string" and s.config ~= "" then
+          return s.config
+        end
+      end
+    end
+  end
+
+  -- 2) z UI bota (jak jest dostępne)
   if modules.game_bot and modules.game_bot.contentsPanel and modules.game_bot.contentsPanel.config then
     local currentConfig = modules.game_bot.contentsPanel.config:getCurrentOption()
     if currentConfig and currentConfig.text then
@@ -10,12 +29,14 @@ local function detectConfigName()
     end
   end
 
+  -- 3) fallback: skan katalogu /bot
   local configs = g_resources.listDirectoryFiles("bot", false, true)
   for _, config in ipairs(configs) do
     if g_resources.directoryExists("bot/" .. config .. "/vBot") then
       return config
     end
   end
+
   return "default"
 end
 
@@ -30,30 +51,35 @@ local cavebotFolder  = "bot/" .. configName .. "/cavebot"
 local targetbotFolder= "bot/" .. configName .. "/targetbot"
 local updaterFolder  = configFolder -- file_lists.lua w tym folderze
 
--- Usuwanie profili
+-- Usuwanie profili + storage.json
 local function removeProfileFiles()
   local removedCount = 0
+
+  -- 0) wyczyść runtime storage skryptów, żeby po chwili nie “wróciło”
+  storage = {}
 
   -- 1) standardowe profile w /storage/
   local profileFiles = {"profile_1.json","profile_2.json","profile_3.json","profile_4.json","profile_5.json"}
   for _, filename in ipairs(profileFiles) do
     local profilePath = storageFolder .. "/" .. filename
     if g_resources.fileExists(profilePath) then
-      if g_resources.deleteFile(profilePath) then
+      -- nadpisanie pustym jest pewniejsze niż delete (bot/klient potrafi odtworzyć plik)
+      if g_resources.writeFileContents(profilePath, "{}") then
         removedCount = removedCount + 1
-        warn("Removed: " .. profilePath)
+        warn("Wiped: " .. profilePath)
       end
     end
   end
 
-  -- 2) alternatywny zapis: bot/<configName>/storage.json (w głównym katalogu configa)
+  -- 2) alternatywny zapis: bot/<configName>/storage.json
   local altStorage = configFolder .. "/storage.json"
   if g_resources.fileExists(altStorage) then
-    if g_resources.deleteFile(altStorage) then
+    if g_resources.writeFileContents(altStorage, "{}") then
       removedCount = removedCount + 1
-      warn("Removed: " .. altStorage)
+      warn("Wiped: " .. altStorage)
     end
   end
+
   return removedCount
 end
 
