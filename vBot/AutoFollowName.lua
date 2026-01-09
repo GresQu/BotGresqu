@@ -11,7 +11,7 @@ followTE = UI.TextEdit(storage[followName].player or "name", function(widget, ne
     storage[followName].player = newText
 end)
 
-local followChange = macro(200, "Follow Change", function() end)
+local followChange = macro(20, "Follow Change", function() end)
 
 local followMacro = macro(20, "Follow", function()
     local target = getCreatureByName(storage[followName].player)
@@ -27,7 +27,7 @@ local followMacro = macro(20, "Follow", function()
         return
     end
     if autoWalk(p, 20, { ignoreNonPathable = true, precision = 1 }) then
-        delay(100)
+        delay(20)
     end
 end)
 
