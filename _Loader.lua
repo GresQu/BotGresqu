@@ -39,6 +39,7 @@ scriptManager.availableScripts = {
     {name = "profile_selector", id = "profile_selector", file = "profile_selector_ui", status = "disable"},
     {name = "FriendList", id = "myFriendList", file = "myFriendList", hidden = true},
     {name = "Alarms", id = "alarms", file = "alarms"},
+	{name = "On_Screen_Message", id = "On_Screen_Message", file = "On_Screen_Message"},
     {name = "Auto Friend Party", id = "auto_friend_party", file = "auto_friend_party"},
     {name = "Ingame Editor", id = "ingame_editor", file = "ingame_editor"},
     {name = "BattleList Filters", id = "battleListFilters", file = "battleListFilters" , status = "disable"},
