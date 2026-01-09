@@ -3,20 +3,20 @@ local updateInProgress = false
 
 -- Funkcja wykrywająca aktualny config
 local function detectConfigName()
-    if modules.game_bot and modules.game_bot.contentsPanel and modules.game_bot.contentsPanel.config then
-        local currentConfig = modules.game_bot.contentsPanel.config:getCurrentOption()
-        if currentConfig and currentConfig.text then
-            return currentConfig.text
-        end
+  if modules.game_bot and modules.game_bot.contentsPanel and modules.game_bot.contentsPanel.config then
+    local currentConfig = modules.game_bot.contentsPanel.config:getCurrentOption()
+    if currentConfig and currentConfig.text then
+      return currentConfig.text
     end
-    
-    local configs = g_resources.listDirectoryFiles("bot", false, true)
-    for _, config in ipairs(configs) do
-        if g_resources.directoryExists("bot/" .. config .. "/vBot") then
-            return config
-        end
+  end
+
+  local configs = g_resources.listDirectoryFiles("bot", false, true)
+  for _, config in ipairs(configs) do
+    if g_resources.directoryExists("bot/" .. config .. "/vBot") then
+      return config
     end
-    return "default"
+  end
+  return "default"
 end
 
 local configName = detectConfigName()
