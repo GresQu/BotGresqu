@@ -32,18 +32,29 @@ local updaterFolder  = configFolder -- file_lists.lua w tym folderze
 
 -- Usuwanie profili
 local function removeProfileFiles()
-    local removedCount = 0
-    local profileFiles = {"profile_1.json","profile_2.json","profile_3.json","profile_4.json","profile_5.json"}
-    for _, filename in ipairs(profileFiles) do
-        local profilePath = storageFolder .. "/" .. filename
-        if g_resources.fileExists(profilePath) then
-            if g_resources.deleteFile(profilePath) then
-                removedCount = removedCount + 1
-                warn("Removed: " .. filename)
-            end
-        end
+  local removedCount = 0
+
+  -- 1) standardowe profile w /storage/
+  local profileFiles = {"profile_1.json","profile_2.json","profile_3.json","profile_4.json","profile_5.json"}
+  for _, filename in ipairs(profileFiles) do
+    local profilePath = storageFolder .. "/" .. filename
+    if g_resources.fileExists(profilePath) then
+      if g_resources.deleteFile(profilePath) then
+        removedCount = removedCount + 1
+        warn("Removed: " .. profilePath)
+      end
     end
-    return removedCount
+  end
+
+  -- 2) alternatywny zapis: bot/<configName>/storage.json (w głównym katalogu configa)
+  local altStorage = configFolder .. "/storage.json"
+  if g_resources.fileExists(altStorage) then
+    if g_resources.deleteFile(altStorage) then
+      removedCount = removedCount + 1
+      warn("Removed: " .. altStorage)
+    end
+  end
+  return removedCount
 end
 
 -- Zapis pliku
