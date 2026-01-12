@@ -1,8 +1,8 @@
--- ════════════════════════════════════════════════════════
--- FUNÇÕES AUXILIARES PARA ITENS COM CARGA
--- ════════════════════════════════════════════════════════
+setDefaultTab("HP")
+local sep = UI.Separator()
+sep:setHeight(4)
+sep:setBackgroundColor('#A0B0C0')
 
--- Função para obter ID de item inativo (quando perde carga)
 function getInactiveItemId(itemId)
     local inactiveIds = {
         -- Rings
@@ -23,7 +23,6 @@ function getInactiveItemId(itemId)
     return inactiveIds[itemId] or itemId
 end
 
--- Função para obter ID de item ativo (quando tem carga)
 function getActiveItemId(itemId)
     local activeIds = {
         -- Rings
