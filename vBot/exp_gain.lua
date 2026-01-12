@@ -5,14 +5,6 @@ local sep1 = UI.Separator()
 sep1:setHeight(4)
 sep1:setBackgroundColor('#A0B0C0')
 
-local title = UI.Label("Exp/h Monitor")
-title:setColor("orange")
-title:setTextAlign(AlignCenter)
-
-local sep2 = UI.Separator()
-sep2:setHeight(4)
-sep2:setBackgroundColor('#A0B0C0')
-
 -- Zmienne
 local expGain = 0
 local startTime = nil
