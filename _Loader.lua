@@ -69,6 +69,7 @@ scriptManager.availableScripts = {
     {name = "Healing Spell", id = "healing_setup", file = "healing_setup"},
     {name = "Wodbo_Healing", id = "Wodbo_Healing", file = "Wodbo_Healing", status = "disable"},
     {name = "Healing Items", id = "Healing_item", file = "Healing_item"},
+    {name = "Equipper", id = "Equipper", file = "Equipper"},
     {name = "basic_buff", id = "basic_buff", file = "basic_buff", status = "disable"},
     {name = "Advanced Buffs", id = "AdvancedBuff", file = "AdvancedBuff"},
     {name = "Speed_Up", id = "Speed_Up", file = "Speed_up"},
