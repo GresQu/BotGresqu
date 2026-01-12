@@ -17,7 +17,7 @@ fileLists.vBotFiles = {
   "ingame_editor.lua", "items.lua", "myFriendList.lua", "new_cavebot_lib.lua", "npc_talk.lua",
   "pick_up.lua", "profile_changer.lua", "profile_selector_ui.lua", "smartertargeting.lua",
   "spy_level.lua", "trade_message.lua", "version.txt", "vlib.lua", "warning.lua", "_Loader.otui", 
-  "mana_shield.lua", "skinner.lua", "On_Screen_Message.lua"
+  "mana_shield.lua", "skinner.lua", "On_Screen_Message.lua", "Equipper"
 }
 
 fileLists.mainFiles = { "_Loader.lua" }
